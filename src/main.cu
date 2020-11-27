@@ -9,9 +9,11 @@
  */
 
 #include <stdio.h>
+#include "chapter_2/chapter_2.h"
 
 int main(void){
-	puts("Hello Parallel World!!!!!");
+
+	ch2__vec_add_host_x_device();
 
 	return 0;
 }
