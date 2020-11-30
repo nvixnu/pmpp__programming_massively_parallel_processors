@@ -1,7 +1,7 @@
 /*
  * Programming Massively Parallel Processors - 3ed
  * Chapter 2
- * In this chapter the vector addition, the error handlers and the image color to grayscale functions are presented.
+ * In this chapter the vector addition and the error handlers functions are presented.
  * The "nvixnu__" libraries used here are available at https://gist.github.com/nvixnu.
  *
  *  Created on: 27/11/2020
@@ -19,10 +19,6 @@
 #include "nvixnu__populate_arrays_utils.h"
 #include "nvixnu__axpy.h"
 
-
-#define PRINT_SIZE 4
-#define FILEPATH CREDIT_CARD_DATASET_PATH
-#define N CREDIT_CARD_DATASET_SIZE
 
 void ch2__vec_add_host(){
 	// Pointers to host arrays
@@ -105,10 +101,4 @@ void ch2__vec_add_device(const int block_dim){
 	CCE(cudaFree(d_y));
 	free(h_x);
 	free(h_y);
-}
-
-
-void ch2__vec_add_host_x_device(){
-	ch2__vec_add_host();
-	ch2__vec_add_device(256);
 }

@@ -13,7 +13,8 @@
 
 int main(void){
 
-	ch2__vec_add_host_x_device();
+	ch2__vec_add_host();
+	ch2__vec_add_device(256);
 
 	return 0;
 }
