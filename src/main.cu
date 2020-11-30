@@ -10,11 +10,12 @@
 
 #include <stdio.h>
 #include "chapter_2/chapter_2.h"
+#include "utils.h"
 
 int main(void){
 
-	ch2__vec_add_host();
-	ch2__vec_add_device(256);
+	ch2__vec_add({.env = Device});
+	ch2__vec_add({.env = Host});
 
 	return 0;
 }

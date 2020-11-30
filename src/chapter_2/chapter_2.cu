@@ -12,28 +12,16 @@
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
-#include "../utils.h"
-#include "../datasets_info.h" //Credit card dataset info
 #include "nvixnu__array_utils.h" //Map and print functions
 #include "nvixnu__error_utils.h"
 #include "nvixnu__populate_arrays_utils.h"
 #include "nvixnu__axpy.h"
 
 
-void ch2__vec_add_host(){
-	// Pointers to host arrays
-	double *x, *y;
-
+void ch2__vec_add_host(double *x, double *y){
 	// Time handlers
 	float duration;
 	struct timespec start, stop;
-
-	//Allocates the heap memory
-	x = (double*)malloc(N*sizeof(double));
-	y = (double*)malloc(N*sizeof(double));
-
-	//Populates the arrays
-	nvixnu__populate_multiple_arrays_from_file(FILEPATH, "", "%lf,", "", N, sizeof(double), 2, x, y);
 
 	//Run the host function
 	clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
@@ -45,14 +33,9 @@ void ch2__vec_add_host(){
 	printf("\nHost elapsed time: %lf ms\n", duration);
 	printf("Last %d values:\n", PRINT_SIZE);
 	nvixnu__array_map(y + (N - PRINT_SIZE), sizeof(double), PRINT_SIZE, nvixnu__print_item_double);
-
-	free(x);
-	free(y);
 }
 
-void ch2__vec_add_device(const int block_dim){
-	// Pointers to host arrays
-	double *h_x, *h_y;
+void ch2__vec_add_device(double *h_x, double *h_y){
 	// Pointers to device arrays
 	double *d_x, *d_y;
 
@@ -61,14 +44,6 @@ void ch2__vec_add_device(const int block_dim){
 	cudaEvent_t start, stop;
 	CCE(cudaEventCreate(&start));
 	CCE(cudaEventCreate(&stop));
-
-
-	//Allocates the heap memory
-	h_x = (double*)malloc(N*sizeof(double));
-	h_y = (double*)malloc(N*sizeof(double));
-
-	//Populates the arrays
-	nvixnu__populate_multiple_arrays_from_file(FILEPATH, "", "%lf,", "", N, sizeof(double), 2, h_x, h_y);
 
 	//Allocates the global memory
 	CCE(cudaMalloc(&d_x, N*sizeof(double)));
@@ -80,7 +55,7 @@ void ch2__vec_add_device(const int block_dim){
 
 	//Launches the kernel
 	CCE(cudaEventRecord(start));
-	nvixnu__axpy_kernel<<<ceil(N/(block_dim*1.0)), block_dim>>>(1.0, d_x, d_y, N);
+	nvixnu__axpy_kernel<<<ceil(N/(256*1.0)), 256>>>(1.0, d_x, d_y, N);
 	CCLE();
 	CCE(cudaEventRecord(stop));
 
@@ -99,6 +74,25 @@ void ch2__vec_add_device(const int block_dim){
 
 	CCE(cudaFree(d_x));
 	CCE(cudaFree(d_y));
-	free(h_x);
-	free(h_y);
+}
+
+void ch2__vec_add(config_t config){
+	// Pointers to host arrays
+	double *x, *y;
+
+	//Allocates the heap memory
+	x = (double*)malloc(N*sizeof(double));
+	y = (double*)malloc(N*sizeof(double));
+
+	//Populates the arrays
+	nvixnu__populate_multiple_arrays_from_file(FILEPATH, "", "%lf,", "", N, sizeof(double), 2, x, y);
+
+	if(config.env == Host){
+		ch2__vec_add_host(x, y);
+	}else{
+		ch2__vec_add_device(x, y);
+	}
+
+	free(x);
+	free(y);
 }

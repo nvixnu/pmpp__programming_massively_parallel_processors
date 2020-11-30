@@ -8,20 +8,18 @@
 #ifndef CHAPTER_2_H_
 #define CHAPTER_2_H_
 
-#define PRINT_SIZE 5
+#define PRINT_SIZE 7
 #define FILEPATH CREDIT_CARD_DATASET_PATH
 #define N CREDIT_CARD_DATASET_SIZE/2
 
-/**
- * Performs the CPU vector addition
- */
-void ch2__vec_add_host(void);
+#include "../utils.h"
+#include "../datasets_info.h" //Credit card dataset info
 
 /**
- * Performs the GPU vector addition
- * @param block_dim The block dimension (Number of threads in each block)
+ * Performs the host and device vector addition
+ * @param env Enum with the values Host = 0, Device = 1
  */
-void ch2__vec_add_device(const int block_dim);
+void ch2__vec_add(config_t config);
 
 
 

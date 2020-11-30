@@ -20,4 +20,20 @@
  */
 #define HOST_DURATION_MS(start, stop) (stop.tv_sec - start.tv_sec) * 1e3 + (stop.tv_nsec - start.tv_nsec) / 1e6
 
+/**
+ * Indicates which version to run
+ */
+typedef enum {
+	Host = 0,
+	Device = 1
+} env_e;
+
+/**
+ * Configuration passed to chapters functions
+ */
+typedef struct{
+	env_e env = Device;
+	int block_dim = 1024;
+} config_t;
+
 #endif /* UTILS_H_ */
