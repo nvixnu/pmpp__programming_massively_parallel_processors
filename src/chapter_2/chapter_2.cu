@@ -1,56 +1,78 @@
 /*
- * chapter_2.cu
+ * Programming Massively Parallel Processors - 3ed
+ * Chapter 2
+ * In this chapter the vector addition, the error handlers and the image color to grayscale functions are presented.
+ * The "nvixnu__" libraries used here are available at https://gist.github.com/nvixnu.
  *
  *  Created on: 27/11/2020
  *  Author: Nvixnu
  */
 
+#include "chapter_2.h"
 #include <stdio.h>
 #include <math.h>
-
-#include "chapter_2.h"
-
 #include <time.h>
-#include "nvixnu__cuda_devices_props.h"
-#include "nvixnu__array_utils.h"
+#include "../utils.h"
+#include "../datasets_info.h" //Credit card dataset info
+#include "nvixnu__array_utils.h" //Map and print functions
 #include "nvixnu__error_utils.h"
 #include "nvixnu__populate_arrays_utils.h"
 #include "nvixnu__axpy.h"
 
-#define INPUT_ROWS 284807
-#define INPUT_COLS 28
-#define N INPUT_ROWS*INPUT_COLS/2
-#define STR_HELPER(x) #x
-#define STR(x) STR_HELPER(x)
-#define FILENAME "../datasets/credit_card_fraud/" STR(INPUT_ROWS) "x" STR(INPUT_COLS) ".csv"
 
-void ch2__vec_add_device(void){
+#define PRINT_SIZE 4
+#define FILEPATH CREDIT_CARD_DATASET_PATH
+#define N CREDIT_CARD_DATASET_SIZE
 
+void ch2__vec_add_host(){
+	// Pointers to host arrays
+	double *x, *y;
+
+	// Time handlers
+	float duration;
+	struct timespec start, stop;
+
+	//Allocates the heap memory
+	x = (double*)malloc(N*sizeof(double));
+	y = (double*)malloc(N*sizeof(double));
+
+	//Populates the arrays
+	nvixnu__populate_multiple_arrays_from_file(FILEPATH, "", "%lf,", "", N, sizeof(double), 2, x, y);
+
+	//Run the host function
+	clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
+	nvixnu__axpy_host(1.0, x, y, N);
+	clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &stop);
+
+	//Prints the host result and the elapsed time
+	duration = HOST_DURATION_MS(start, stop);
+	printf("\nHost elapsed time: %lf ms\n", duration);
+	printf("Last %d values:\n", PRINT_SIZE);
+	nvixnu__array_map(y + (N - PRINT_SIZE), sizeof(double), PRINT_SIZE, nvixnu__print_item_double);
+
+	free(x);
+	free(y);
 }
 
-void ch2__vec_add_host(void){
+void ch2__vec_add_device(const int block_dim){
+	// Pointers to host arrays
+	double *h_x, *h_y;
+	// Pointers to device arrays
+	double *d_x, *d_y;
 
-}
+	// Device time handlers
+	float duration;
+	cudaEvent_t start, stop;
+	CCE(cudaEventCreate(&start));
+	CCE(cudaEventCreate(&stop));
 
-
-void ch2__vec_add_host_x_device(void){
-	// Host and device arrays
-	double *h_x, *h_y, *d_x, *d_y, a = 1.0;
-	// Elapsed time handlers
-	struct timespec h_start, h_stop;
-	float k_duration, h_duration;
-	cudaEvent_t k_start, k_stop;
-
-	// Create the time handlers
-	CCE(cudaEventCreate(&k_start));
-	CCE(cudaEventCreate(&k_stop));
 
 	//Allocates the heap memory
 	h_x = (double*)malloc(N*sizeof(double));
 	h_y = (double*)malloc(N*sizeof(double));
 
 	//Populates the arrays
-	nvixnu__populate_multiple_arrays_from_file(FILENAME, "", "%lf,", "", N, sizeof(double), 2, h_x, h_y);
+	nvixnu__populate_multiple_arrays_from_file(FILEPATH, "", "%lf,", "", N, sizeof(double), 2, h_x, h_y);
 
 	//Allocates the global memory
 	CCE(cudaMalloc(&d_x, N*sizeof(double)));
@@ -61,40 +83,32 @@ void ch2__vec_add_host_x_device(void){
 	CCE(cudaMemcpy(d_y, h_y, N*sizeof(double), cudaMemcpyHostToDevice));
 
 	//Launches the kernel
-	CCE(cudaEventRecord(k_start));
-	nvixnu__axpy<<<ceil(N/1024.0), 1024>>>(a, d_x, d_y, N);
+	CCE(cudaEventRecord(start));
+	nvixnu__axpy_kernel<<<ceil(N/(block_dim*1.0)), block_dim>>>(1.0, d_x, d_y, N);
 	CCLE();
-	CCE(cudaEventRecord(k_stop));
+	CCE(cudaEventRecord(stop));
 
 	//Calculates the elapsed time
-	CCE(cudaEventSynchronize(k_stop));
-	CCE(cudaEventElapsedTime(&k_duration, k_start, k_stop));
+	CCE(cudaEventSynchronize(stop));
+	CCE(cudaEventElapsedTime(&duration, start, stop));
 
 	//Copies the result back to the heap
 	CCE(cudaMemcpy(h_y, d_y, N*sizeof(double), cudaMemcpyDeviceToHost));
 
+	//Prints the kernel result and the elapsed time
+	printf("\nKernel elapsed time: %f ms\n", duration);
+	printf("Last %d values:\n", PRINT_SIZE);
+	nvixnu__array_map(h_y + (N - PRINT_SIZE), sizeof(double), PRINT_SIZE, nvixnu__print_item_double);
 
-	//Prints the result
-	printf("\nKernel elapsed time: %f ms\n", k_duration);
-	printf("Last 20 values:\n");
-	nvixnu__array_map(h_y + (N - 20), sizeof(double), 20, nvixnu__print_item_double);
-
-
-	//Re-populates the h_y array
-	nvixnu__populate_multiple_arrays_from_file(FILENAME, "%*lf, ", "%lf,", "", N, sizeof(double), 1, h_y);
-
-	//Run the host function
-	clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &h_start);
-	nvixnu__h_axpy(a, h_x, h_y, N);
-	clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &h_stop);
-
-	h_duration = (h_stop.tv_sec - h_start.tv_sec) * 1e3 + (h_stop.tv_nsec - h_start.tv_nsec) / 1e6;
-	printf("\nHost elapsed time: %lf ms\n", h_duration);
-	printf("Last 20 values:\n");
-	nvixnu__array_map(h_y + (N - 20), sizeof(double), 20, nvixnu__print_item_double);
 
 	CCE(cudaFree(d_x));
 	CCE(cudaFree(d_y));
 	free(h_x);
 	free(h_y);
+}
+
+
+void ch2__vec_add_host_x_device(){
+	ch2__vec_add_host();
+	ch2__vec_add_device(256);
 }

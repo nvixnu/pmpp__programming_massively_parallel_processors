@@ -13,4 +13,6 @@
  */
 void ch2__vec_add_host_x_device(void);
 
+
+
 #endif /* CHAPTER_4_H_ */
