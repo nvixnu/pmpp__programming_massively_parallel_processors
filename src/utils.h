@@ -33,7 +33,7 @@ typedef enum {
  */
 typedef struct{
 	env_e env = Device;
-	int block_dim = 1024;
+	dim3 block_dim = 1024;
 } config_t;
 
 #endif /* UTILS_H_ */

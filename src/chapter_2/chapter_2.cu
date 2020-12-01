@@ -8,10 +8,10 @@
  *  Author: Nvixnu
  */
 
-#include "chapter_2.h"
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
+#include "chapter_2.h"
 #include "nvixnu__array_utils.h" //Map and print functions
 #include "nvixnu__error_utils.h"
 #include "nvixnu__populate_arrays_utils.h"

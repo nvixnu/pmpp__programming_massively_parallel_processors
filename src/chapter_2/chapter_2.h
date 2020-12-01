@@ -1,5 +1,8 @@
 /*
- * chapter_2.h
+ * Programming Massively Parallel Processors - 3ed
+ * Chapter 2
+ * In this chapter the vector addition and the error handlers functions are presented.
+ * The "nvixnu__" libraries used here are available at https://gist.github.com/nvixnu.
  *
  *  Created on: 27/11/2020
  *  Author: Nvixnu
@@ -17,7 +20,7 @@
 
 /**
  * Performs the host and device vector addition
- * @param env Enum with the values Host = 0, Device = 1
+ * @param config Struct with the execution configuration such as environment (Host or Device) and block dimension (Number of threads per block)
  */
 void ch2__vec_add(config_t config);
 

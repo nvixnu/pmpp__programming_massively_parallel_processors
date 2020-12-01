@@ -13,4 +13,4 @@
  */
 void chapter_1(void);
 
-#endif /* CHAPTER_4_H_ */
+#endif /* CHAPTER_1_H_ */
