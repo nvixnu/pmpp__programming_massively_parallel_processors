@@ -21,7 +21,42 @@
 #define HOST_DURATION_MS(start, stop) (stop.tv_sec - start.tv_sec) * 1e3 + (stop.tv_nsec - start.tv_nsec) / 1e6
 
 /**
- * Indicates which version to run
+ * Start the host timers
+ */
+#define HOST_TIC(n) \
+		float duration##n; \
+		struct timespec start##n, stop##n; \
+		clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start##n);
+
+/**
+ * Stop the host timer and calculates and print the elapsed time
+ */
+#define HOST_TOC(n) \
+		clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &stop##n); \
+		duration##n = HOST_DURATION_MS(start##n, stop##n); \
+		printf("\nHost elapsed time: %lf ms\n", duration##n);
+
+/**
+ * Start the device timers
+ */
+#define DEVICE_TIC(n) \
+		float duration##n; \
+		cudaEvent_t start##n, stop##n; \
+		CCE(cudaEventCreate(&start##n)); \
+		CCE(cudaEventCreate(&stop##n)); \
+		CCE(cudaEventRecord(start##n));
+
+/**
+ * Stop the device timer and calculates and print the elapsed time
+ */
+#define DEVICE_TOC(n) \
+		CCE(cudaEventRecord(stop##n)); \
+		CCE(cudaEventSynchronize(stop##n)); \
+		CCE(cudaEventElapsedTime(&duration##n, start##n, stop##n)); \
+		printf("\nKernel elapsed time: %f ms\n", duration##n);
+
+/**
+ * Indicates which environment should run the function
  */
 typedef enum {
 	Host = 0,
@@ -29,11 +64,19 @@ typedef enum {
 } env_e;
 
 /**
- * Configuration passed to chapters functions
+ * Struct for holding 3d information
  */
 typedef struct{
-	env_e env = Device;
-	dim3 block_dim = 1024;
-} config_t;
+	int x;
+	int y;
+	int z;
+} dim_t;
+
+/**
+ * Kernel configuration
+ */
+typedef struct{
+	dim_t block_dim = {1024, 1, 1};
+} kernel_config_t;
 
 #endif /* UTILS_H_ */

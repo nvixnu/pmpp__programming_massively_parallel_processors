@@ -22,8 +22,9 @@
 
 /**
  * Converts a colored image to grayscale
- * @param config Struct with the execution configuration such as environment (Host or Device) and block dimension (Number of threads per block)
+ * @para env Environment to run on (Host or Device)
+ * @param config Kernel configuration parameters such as the block dimension (Number of threads per block)
  */
-void ch3__color_to_grayscale(config_t config);
+void ch3__color_to_grayscale(env_e env, kernel_config_t config);
 
 #endif /* CHAPTER_3_H_ */

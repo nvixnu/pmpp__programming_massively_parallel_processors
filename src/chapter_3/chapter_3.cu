@@ -9,6 +9,7 @@
  */
 
 #include <stdio.h>
+#include <time.h>
 #include "chapter_3.h"
 
 #include <opencv2/core.hpp>
@@ -29,7 +30,7 @@ void color_to_grayscale_kernel(uchar *input, uchar *output, const int width, con
 	}
 }
 
-void ch3__color_to_grayscale_device(uchar *h_input, uchar *h_output, const int width, const int height){
+void ch3__color_to_grayscale_device(uchar *h_input, uchar *h_output, const int width, const int height, kernel_config_t config){
 	uchar *d_input, *d_output;
 	const int length = width*height;
 
@@ -38,11 +39,13 @@ void ch3__color_to_grayscale_device(uchar *h_input, uchar *h_output, const int w
 
 	CCE(cudaMemcpy(d_input, h_input, 3*length*sizeof(uchar), cudaMemcpyHostToDevice));
 
-	dim3 block_dim(32, 32, 1);
-	dim3 grid_dim(ceil(width/32.0), ceil(height/32.0), 1);
+	dim3 block_dim(config.block_dim.x, config.block_dim.y, 1);
+	dim3 grid_dim(ceil(width/config.block_dim.x*1.0), ceil(height/config.block_dim.y*1.0), 1);
 
+	DEVICE_TIC(0);
 	color_to_grayscale_kernel<<<grid_dim, block_dim>>>(d_input, d_output, width, height);
 	CCLE();
+	DEVICE_TOC(0);
 
 	CCE(cudaMemcpy(h_output, d_output, length*sizeof(uchar), cudaMemcpyDeviceToHost));
 
@@ -51,6 +54,7 @@ void ch3__color_to_grayscale_device(uchar *h_input, uchar *h_output, const int w
 }
 
 void ch3__color_to_grayscale_host(uchar *input, uchar *output, const int width, const int height){
+	HOST_TIC(0);
 	for(int row = 0; row < height; row++){
 	    for(int col = 0; col < width; col++){
 	    	int gray_offset = row*width + col;
@@ -58,9 +62,10 @@ void ch3__color_to_grayscale_host(uchar *input, uchar *output, const int width, 
 	    	output[gray_offset] = 0.07*input[rgb_offset + 2] + 0.71*input[rgb_offset + 1] + 0.21*input[rgb_offset + 0];
 	    }
 	}
+	HOST_TOC(0);
 }
 
-void ch3__color_to_grayscale(config_t config){
+void ch3__color_to_grayscale(env_e env, kernel_config_t config){
 	// reads the image file
 	Mat src = imread(INPUT_FILE, IMREAD_COLOR);
 	// gets the total number of pixels
@@ -84,11 +89,11 @@ void ch3__color_to_grayscale(config_t config){
 	memcpy(input, src.data, 3*length*sizeof(uchar));
 
 	//Lauch the color_to_grayscale function
-	if(config.env == Host){
+	if(env == Host){
 		ch3__color_to_grayscale_host(input, output, src.cols, src.rows);
 		output_filename = OUTPUT_HOST_FILE;
 	}else{
-		ch3__color_to_grayscale_device(input, output, src.cols, src.rows);
+		ch3__color_to_grayscale_device(input, output, src.cols, src.rows, config);
 		output_filename = OUTPUT_DEVICE_FILE;
 	}
 
@@ -97,7 +102,6 @@ void ch3__color_to_grayscale(config_t config){
 
 	// Save the grayscale image to the appropriate file
 	imwrite(output_filename, dst);
-
 
 	return;
 }

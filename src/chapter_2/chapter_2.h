@@ -20,9 +20,10 @@
 
 /**
  * Performs the host and device vector addition
- * @param config Struct with the execution configuration such as environment (Host or Device) and block dimension (Number of threads per block)
+ * @para env Environment to run on (Host or Device)
+ * @param config Kernel configuration parameters such as the block dimension (Number of threads per block)
  */
-void ch2__vec_add(config_t config);
+void ch2__vec_add(env_e env, kernel_config_t config);
 
 
 
