@@ -21,36 +21,49 @@ using namespace cv;
 __host__
 __device__
 __attribute__((always_inline))
-inline void color_to_grayscale_unit (uchar *input, uchar *output, const int width, const int height, int row, int col){
-	int gray_offset = row*width + col;
-	int rgb_offset = gray_offset * 3;
-	output[gray_offset] = 0.07*input[rgb_offset + 2] + 0.71*input[rgb_offset + 1] + 0.21*input[rgb_offset + 0];
+inline void blur_unit (uchar *input, uchar *output, const int width, const int height, int row, int col){
+	int pix_val = 0;
+	int pixels = 0;
+
+	for(int blur_row = -BLUR_SIZE; blur_row < BLUR_SIZE+1; ++blur_row){
+		for(int blur_col = -BLUR_SIZE; blur_col < BLUR_SIZE+1; ++blur_col){
+			int cur_row = row + blur_row;
+			int cur_col = col + blur_col;
+
+			if(cur_row > -1 && cur_row < height && cur_col > -1 && cur_col < width){
+				pix_val += input[cur_row * width + cur_col];
+				pixels++;
+			}
+		}
+	}
+	output[row * width + col] = (uchar)(pix_val/pixels);
 }
 
+
 __global__
-void color_to_grayscale_kernel(uchar *input, uchar *output, const int width, const int height){
+void blur_kernel(uchar *input, uchar *output, const int width, const int height){
 	int row = blockIdx.y*blockDim.y + threadIdx.y;
 	int col = blockIdx.x*blockDim.x + threadIdx.x;
 
 	if(col < width && row < height){
-		color_to_grayscale_unit(input, output, width, height, row, col);
+		blur_unit(input, output, width, height, row, col);
 	}
 }
 
-void ch3__color_to_grayscale_device(uchar *h_input, uchar *h_output, const int width, const int height, kernel_config_t config){
+void ch3__blur_device(uchar *h_input, uchar *h_output, const int width, const int height, kernel_config_t config){
 	uchar *d_input, *d_output;
 	const int length = width*height;
 
-	CCE(cudaMalloc(&d_input, 3*length*sizeof(uchar)));
+	CCE(cudaMalloc(&d_input, length*sizeof(uchar)));
 	CCE(cudaMalloc(&d_output, length*sizeof(uchar)));
 
-	CCE(cudaMemcpy(d_input, h_input, 3*length*sizeof(uchar), cudaMemcpyHostToDevice));
+	CCE(cudaMemcpy(d_input, h_input, length*sizeof(uchar), cudaMemcpyHostToDevice));
 
 	dim3 block_dim(config.block_dim.x, config.block_dim.y, 1);
 	dim3 grid_dim(ceil(width/config.block_dim.x*1.0), ceil(height/config.block_dim.y*1.0), 1);
 
 	DEVICE_TIC(0);
-	color_to_grayscale_kernel<<<grid_dim, block_dim>>>(d_input, d_output, width, height);
+	blur_kernel<<<grid_dim, block_dim>>>(d_input, d_output, width, height);
 	CCLE();
 	DEVICE_TOC(0);
 
@@ -60,21 +73,21 @@ void ch3__color_to_grayscale_device(uchar *h_input, uchar *h_output, const int w
 	CCE(cudaFree(d_output));
 }
 
-void ch3__color_to_grayscale_host(uchar *input, uchar *output, const int width, const int height){
+void ch3__blur_host(uchar *input, uchar *output, const int width, const int height){
 	HOST_TIC(0);
 	for(int row = 0; row < height; row++){
-	    for(int col = 0; col < width; col++){
-	    	color_to_grayscale_unit(input, output, width, height, row, col);
-	    }
+		for(int col = 0; col < width; col++){
+			blur_unit(input, output, width, height, row, col);
+		}
 	}
 	HOST_TOC(0);
 }
 
-void ch3__color_to_grayscale(env_e env, kernel_config_t config){
+void ch3__blur(env_e env, kernel_config_t config){
 	// reads the image file
-	Mat src = imread(INPUT_FILE_GRAY, IMREAD_COLOR);
+	Mat src = imread(INPUT_FILE_BLUR, IMREAD_GRAYSCALE);
 	// gets the total number of pixels
-	int length = src.rows*src.cols; //Or src.total()
+	int length = src.rows*src.cols; //Or  src.elemSize() * src.total()
 	// Pointers to pixel arrays
 	uchar *input, *output;
 	const char * output_filename;
@@ -87,19 +100,19 @@ void ch3__color_to_grayscale(env_e env, kernel_config_t config){
 	}
 
 	//Allocates the input and output pixel arrays
-	input = (uchar *)malloc(3*length*sizeof(uchar)); //Or src.elemSize() * src.total()
-	output = (uchar *)malloc(length*sizeof(uchar));
+	input = (uchar *)malloc(length);
+	output = (uchar *)malloc(length);
 
 	//Copy the pixels from image to the input array
-	memcpy(input, src.data, 3*length*sizeof(uchar));
+	memcpy(input, src.data, length);
 
-	//Lauch the color_to_grayscale function
+	//Lauch the blur function
 	if(env == Host){
-		ch3__color_to_grayscale_host(input, output, src.cols, src.rows);
-		output_filename = OUTPUT_HOST_FILE_GRAY;
+		ch3__blur_host(input, output, src.cols, src.rows);
+		output_filename = OUTPUT_HOST_FILE_BLUR;
 	}else{
-		ch3__color_to_grayscale_device(input, output, src.cols, src.rows, config);
-		output_filename = OUTPUT_DEVICE_FILE_GRAY;
+		ch3__blur_device(input, output, src.cols, src.rows, config);
+		output_filename = OUTPUT_DEVICE_FILE_BLUR;
 	}
 
 	//Copy the output pixel array to a destination Mat opject
