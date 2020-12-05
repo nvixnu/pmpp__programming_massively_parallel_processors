@@ -55,12 +55,13 @@
 		CCE(cudaEventElapsedTime(&duration##n, start##n, stop##n)); \
 		printf("\nKernel elapsed time: %f ms\n", duration##n);
 
+
 /**
  * Indicates which environment should run the function
  */
 typedef enum {
-	Host = 0,
-	Device = 1
+	Host,
+	Device
 } env_e;
 
 /**
@@ -77,6 +78,7 @@ typedef struct{
  */
 typedef struct{
 	dim_t block_dim = {1024, 1, 1};
+	const char *kernel_version;
 } kernel_config_t;
 
 #endif /* UTILS_H_ */

@@ -28,11 +28,14 @@ void ch4__matrix_mul_device(double *h_A, double *h_B, double *h_C, const int i_l
 
 	dim3 block_dim(config.block_dim.x, config.block_dim.y, 1);
 	dim3 grid_dim(ceil(K_LENGTH/(double)config.block_dim.x), ceil(I_LENGTH/(double)config.block_dim.y), 1);
-	const int shared_memory_length = 2*config.block_dim.x*config.block_dim.y*sizeof(double);
 
 	DEVICE_TIC(0);
-	//nvixnu__gemm_kernel<<<grid_dim, block_dim>>>(d_A, d_B, d_C, I_LENGTH, J_LENGTH, K_LENGTH);
-	nvixnu__tiled_gemm_kernel<<<grid_dim, block_dim, shared_memory_length>>>(d_A, d_B, d_C, I_LENGTH, J_LENGTH, K_LENGTH, config.block_dim.x);
+	if(config.kernel_version == MATRIX_MUL_KERNEL_NAIVE){
+		nvixnu__gemm_kernel<<<grid_dim, block_dim>>>(d_A, d_B, d_C, I_LENGTH, J_LENGTH, K_LENGTH);
+	}else{
+		const int shared_memory_length = 2*config.block_dim.x*config.block_dim.y*sizeof(double);
+		nvixnu__tiled_gemm_kernel<<<grid_dim, block_dim, shared_memory_length>>>(d_A, d_B, d_C, I_LENGTH, J_LENGTH, K_LENGTH, config.block_dim.x);
+	}
 	CCLE();
 	DEVICE_TOC(0);
 
@@ -76,3 +79,4 @@ void ch4__matrix_mul(env_e env, kernel_config_t config){
 
 	return;
 }
+

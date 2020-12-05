@@ -23,12 +23,16 @@
 #define B_LENGTH J_LENGTH*K_LENGTH
 #define C_LENGTH I_LENGTH*K_LENGTH
 
+#define MATRIX_MUL_KERNEL_NAIVE "NAIVE"
+#define MATRIX_MUL_KERNEL_TILED "TILED"
+
 
 /**
- * Performs the host and device matrix multiplication
+ * Performs the host and device matrix multiplication (MATRIX_MUL_KERNEL_NAIVE and MATRIX_MUL_KERNEL_NAIVE versions)
  * @para env Environment to run on (Host or Device)
  * @param config Kernel configuration parameters such as the block dimension (Number of threads per block)
  */
 void ch4__matrix_mul(env_e env, kernel_config_t config);
+
 
 #endif /* CHAPTER_4_H_ */
