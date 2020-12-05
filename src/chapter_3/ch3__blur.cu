@@ -60,7 +60,7 @@ void ch3__blur_device(uchar *h_input, uchar *h_output, const int width, const in
 	CCE(cudaMemcpy(d_input, h_input, length*sizeof(uchar), cudaMemcpyHostToDevice));
 
 	dim3 block_dim(config.block_dim.x, config.block_dim.y, 1);
-	dim3 grid_dim(ceil(width/config.block_dim.x*1.0), ceil(height/config.block_dim.y*1.0), 1);
+	dim3 grid_dim(ceil(width/(double)config.block_dim.x), ceil(height/(double)config.block_dim.y), 1);
 
 	DEVICE_TIC(0);
 	blur_kernel<<<grid_dim, block_dim>>>(d_input, d_output, width, height);

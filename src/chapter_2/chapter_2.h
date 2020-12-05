@@ -11,12 +11,11 @@
 #ifndef CHAPTER_2_H_
 #define CHAPTER_2_H_
 
-#define PRINT_SIZE 7
-#define FILEPATH CREDIT_CARD_DATASET_PATH
-#define N CREDIT_CARD_DATASET_SIZE/2
-
 #include "../utils.h"
 #include "../datasets_info.h" //Credit card dataset info
+
+#define FILEPATH CREDIT_CARD_DATASET_PATH
+#define N CREDIT_CARD_DATASET_SIZE/2
 
 /**
  * Performs the host and device vector addition

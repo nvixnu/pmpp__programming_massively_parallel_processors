@@ -31,16 +31,12 @@ void ch2__vec_add_device(double *h_x, double *h_y, kernel_config_t config){
 	CCE(cudaMemcpy(d_y, h_y, N*sizeof(double), cudaMemcpyHostToDevice));
 
 	DEVICE_TIC(0);
-	nvixnu__axpy_kernel<<<ceil(N/(config.block_dim.x*1.0)), config.block_dim.x>>>(1.0, d_x, d_y, N);
+	nvixnu__axpy_kernel<<<ceil(N/(double)config.block_dim.x), config.block_dim.x>>>(1.0, d_x, d_y, N);
 	CCLE();
 	DEVICE_TOC(0);
 
 	//Copies the result back to the heap
 	CCE(cudaMemcpy(h_y, d_y, N*sizeof(double), cudaMemcpyDeviceToHost));
-
-
-	printf("Last %d values:\n", PRINT_SIZE);
-	nvixnu__array_map(h_y + (N - PRINT_SIZE), sizeof(double), PRINT_SIZE, nvixnu__print_item_double);
 
 
 	CCE(cudaFree(d_x));
@@ -51,9 +47,6 @@ void ch2__vec_add_host(double *x, double *y){
 	HOST_TIC(0);
 	nvixnu__axpy_host(1.0, x, y, N);
 	HOST_TOC(0);
-
-	printf("Last %d values:\n", PRINT_SIZE);
-	nvixnu__array_map(y + (N - PRINT_SIZE), sizeof(double), PRINT_SIZE, nvixnu__print_item_double);
 }
 
 void ch2__vec_add(env_e env, kernel_config_t config){
@@ -72,6 +65,9 @@ void ch2__vec_add(env_e env, kernel_config_t config){
 	}else{
 		ch2__vec_add_device(x, y, config);
 	}
+
+	printf("Last %d values:\n", PRINT_LENGTH);
+	nvixnu__array_map(y + (N - PRINT_LENGTH), sizeof(double), PRINT_LENGTH, nvixnu__print_item_double);
 
 	free(x);
 	free(y);

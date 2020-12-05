@@ -11,63 +11,95 @@
 #include <stdio.h>
 #include "chapter_2/chapter_2.h"
 #include "chapter_3/chapter_3.h"
+#include "chapter_4/chapter_4.h"
 #include "utils.h"
+
+
+static inline void chapter_2_menu(){
+	printf("Chapter 2\n");
+	printf("Running [vec_add] on Device with 256 threads per block...:\n");
+	ch2__vec_add(Device, {.block_dim = {256,1,1}});
+	printf("\nRunning [vec_add] on Device with 1024 threads per block...:\n");
+	ch2__vec_add(Device, {.block_dim = {1024,1,1}});
+	printf("\nRunning [vec_add] on Host...\n");
+	ch2__vec_add(Host, {});
+}
+
+
+static inline void chapter_3_menu(){
+	int option = -1;
+	while(option != 0){
+		printf("\nCHAPTER 3:\n");
+		switch(option){
+		case 1:
+			printf("Running [color_to_grayscale] on Device with 256 threads per block...:\n");
+			ch3__color_to_grayscale(Device, {.block_dim = {16,16,1}});
+			printf("\nRunning [color_to_grayscale] on Device with 1024 threads per block...:\n");
+			ch3__color_to_grayscale(Device, {.block_dim = {32,32,1}});
+			printf("\nRunning [color_to_grayscale] on Host...\n");
+			ch3__color_to_grayscale(Host, {});
+			option = -1;
+			break;
+		case 2:
+			printf("Running [blur] on Device with 256 threads per block...:\n");
+			ch3__blur(Device, {.block_dim = {16,16,1}});
+			printf("\nRunning [blur] on Device with 1024 threads per block...:\n");
+			ch3__blur(Device, {.block_dim = {32,32,1}});
+			printf("\nRunning [blur] on Host...\n");
+			ch3__blur(Host, {});
+			option = -1;
+			break;
+		default:
+			printf("\t\t[1] - Color to grayscale\n");
+			printf("\t\t[2] - Blur\n");
+			printf("\nPress the number of the algorithm or zero to go back.\n");
+			scanf("%d", &option);
+			setbuf(stdin, NULL);
+		}
+	}
+}
+
+static inline void chapter_4_menu(){
+	printf("Chapter 4\n");
+	printf("Running [matrix_mul] on Device with 256 threads per block...:\n");
+	ch4__matrix_mul(Device, {.block_dim = {16,16,1}});
+	printf("\nRunning [matrix_mul] on Device with 1024 threads per block...:\n");
+	ch4__matrix_mul(Device, {.block_dim = {32,32,1}});
+//	printf("Running [matrix_mul_tiled] on Device with 256 threads per block...:\n");
+//	ch4_matrix_mul_tiled(Device, {.block_dim = {16,16,1}});
+//	printf("\nRunning [matrix_mul_tiled] on Device with 1024 threads per block...:\n");
+//	ch4_matrix_mul_tiled(Device, {.block_dim = {32,32,1}});
+	printf("\nRunning [matrix_mul] on Host...\n");
+	ch4__matrix_mul(Host, {});
+}
+
 
 int main(void){
 
-	int main = -1, ch3 = -1;
+	int main = -1;
 
 	while(main != 0){
 		switch(main){
-			case 2:
-				printf("Chapter 2\n");
-				printf("Running [vec_add] on Device with 256 threads per block...:\n");
-				ch2__vec_add(Device, {.block_dim = {256,1,1}});
-				printf("\nRunning [vec_add] on Device with 1024 threads per block...:\n");
-				ch2__vec_add(Device, {.block_dim = {1024,1,1}});
-				printf("\nRunning [vec_add] on Host...\n");
-				ch2__vec_add(Host, {});
-				main = -1;
-				break;
-			case 3:
-				while(ch3 != 0){
-					printf("\nCHAPTER 3:\n");
-					switch(ch3){
-						case 1:
-							printf("Running [color_to_grayscale] on Device with 256 threads per block...:\n");
-							ch3__color_to_grayscale(Device, {.block_dim = {16,16,1}});
-							printf("\nRunning [color_to_grayscale] on Device with 1024 threads per block...:\n");
-							ch3__color_to_grayscale(Device, {.block_dim = {32,32,1}});
-							printf("\nRunning [color_to_grayscale] on Host...\n");
-							ch3__color_to_grayscale(Host, {});
-							ch3 = -1;
-							break;
-						case 2:
-							printf("Running [blur] on Device with 256 threads per block...:\n");
-							ch3__blur(Device, {.block_dim = {16,16,1}});
-							printf("\nRunning [blur] on Device with 1024 threads per block...:\n");
-							ch3__blur(Device, {.block_dim = {32,32,1}});
-							printf("\nRunning [blur] on Host...\n");
-							ch3__blur(Host, {});
-							ch3 = -1;
-							break;
-						default:
-							printf("\t\t[1] - Color to grayscale\n");
-							printf("\t\t[2] - Blur\n");
-							printf("\nPress the number of the algorithm or zero to go back.\n");
-							scanf("%d", &ch3);
-							setbuf(stdin, NULL);
-					}
-				}
-				main = -1;
-				break;
-			default:
-				printf("\nCHAPTERS:\n");
-				printf("\t[Chapter 2] - Data parallel computing\n");
-				printf("\t[Chapter 3] - Scalable parallel execution\n");
-				printf("\nPress the chapter number or zero to exit.\n");
-				scanf("%d", &main);
-				setbuf(stdin, NULL);
+		case 2:
+			chapter_2_menu();
+			main = -1;
+			break;
+		case 3:
+			chapter_3_menu();
+			main = -1;
+			break;
+		case 4:
+			chapter_4_menu();
+			main = -1;
+			break;
+		default:
+			printf("\nCHAPTERS:\n");
+			printf("\t[Chapter 2] - Data parallel computing (vector addition)\n");
+			printf("\t[Chapter 3] - Scalable parallel execution (Image Grayscale and Blur)\n");
+			printf("\t[Chapter 4] - Memory and data locality (Matrix Multiplication)\n");
+			printf("\nPress the chapter number or zero to exit.\n");
+			scanf("%d", &main);
+			setbuf(stdin, NULL);
 		}
 	}
 
