@@ -14,6 +14,9 @@
 #include "../utils.h"
 #include "../datasets_info.h" //Credit card dataset info
 
+#define CH5__FILEPATH CREDIT_CARD_DATASET_PATH
+#define CH5__ARRAY_LENGTH (CREDIT_CARD_DATASET_LENGTH - 1) //In this dataset the sum reduction is equals to zero. Subtracting 1, the sum should be equals to the negative last number (0.013649)
+
 /**
  * Performs the host and device array sum (reduction)
  * @para env Environment to run on (Host or Device)
