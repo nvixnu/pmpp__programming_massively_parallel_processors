@@ -1,14 +1,17 @@
 /*
- * chapter_1.cu
+ * Programming Massively Parallel Processors - 3ed
+ * Chapter %%%
+ * %%%Description%%%.
+ * The "nvixnu__" libraries used here are available at https://gist.github.com/nvixnu.
  *
- *  Created on: 27/11/2020
+ *  Created on: %%%/12/2020
  *  Author: Nvixnu
  */
 
 #include <stdio.h>
 #include "chapter_1.h"
 
-void chapter_1(void){
+void ch1__XXXX(env_e env, kernel_config_t config){
 	puts("Olá");
 
 	return;

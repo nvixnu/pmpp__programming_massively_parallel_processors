@@ -12,6 +12,7 @@
 #include "chapter_2/chapter_2.h"
 #include "chapter_3/chapter_3.h"
 #include "chapter_4/chapter_4.h"
+#include "chapter_5/chapter_5.h"
 #include "utils.h"
 
 
@@ -73,6 +74,16 @@ static inline void chapter_4_menu(){
 	ch4__matrix_mul(Host, {});
 }
 
+static inline void chapter_5_menu(){
+	printf("Chapter 5\n");
+	printf("Running [ch5__sum_reduction] on Device with 256 threads per block...:\n");
+	ch5__sum_reduction(Device, {.block_dim = {256,1,1}});
+	printf("\nRunning [ch5__sum_reduction] on Device with 1024 threads per block...:\n");
+	ch5__sum_reduction(Device, {.block_dim = {1024,1,1}});
+	printf("\nRunning [ch5__sum_reduction] on Host...\n");
+	ch5__sum_reduction(Host, {});
+}
+
 
 int main(void){
 
@@ -92,11 +103,16 @@ int main(void){
 			chapter_4_menu();
 			main = -1;
 			break;
+		case 5:
+			chapter_5_menu();
+			main = -1;
+			break;
 		default:
 			printf("\nCHAPTERS:\n");
 			printf("\t[Chapter 2] - Data parallel computing (vector addition)\n");
 			printf("\t[Chapter 3] - Scalable parallel execution (Image Grayscale and Blur)\n");
 			printf("\t[Chapter 4] - Memory and data locality (Matrix Multiplication)\n");
+			printf("\t[Chapter 5] - Performance considerations (Array reduction)\n");
 			printf("\nPress the chapter number or zero to exit.\n");
 			scanf("%d", &main);
 			setbuf(stdin, NULL);
