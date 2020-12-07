@@ -13,6 +13,7 @@
 #include "chapter_3/chapter_3.h"
 #include "chapter_4/chapter_4.h"
 #include "chapter_5/chapter_5.h"
+#include "chapter_7/chapter_7.h"
 #include "utils.h"
 
 
@@ -84,6 +85,39 @@ static inline void chapter_5_menu(){
 	ch5__sum_reduction(Host, {});
 }
 
+static inline void chapter_7_menu(){
+	int option = -1;
+	while(option != 0){
+		printf("\nCHAPTER 7:\n");
+		switch(option){
+		case 1:
+			printf("Running [ch7__convolution_1d] on Device with 256 threads per block...:\n");
+			ch7__convolution_1d(Device, {.block_dim = {16,16,1}});
+			printf("\nRunning [ch7__convolution_1d] on Device with 1024 threads per block...:\n");
+			ch7__convolution_1d(Device, {.block_dim = {32,32,1}});
+			printf("\nRunning [ch7__convolution_1d] on Host...\n");
+			ch7__convolution_1d(Host, {});
+			option = -1;
+			break;
+		case 2:
+//			printf("Running [ch7__convolution_2d] on Device with 256 threads per block...:\n");
+//			ch7__convolution_2d(Device, {.block_dim = {16,16,1}});
+//			printf("\nRunning [ch7__convolution_2d] on Device with 1024 threads per block...:\n");
+//			ch3ch7__convolution_2d__blur(Device, {.block_dim = {32,32,1}});
+//			printf("\nRunning [ch7__convolution_2d] on Host...\n");
+//			ch7__convolution_2d(Host, {});
+			option = -1;
+			break;
+		default:
+			printf("\t\t[1] - 1D convolution\n");
+			printf("\t\t[2] - 2D convolution\n");
+			printf("\nPress the number of the algorithm or zero to go back.\n");
+			scanf("%d", &option);
+			setbuf(stdin, NULL);
+		}
+	}
+}
+
 
 int main(void){
 
@@ -107,12 +141,17 @@ int main(void){
 			chapter_5_menu();
 			main = -1;
 			break;
+		case 7:
+			chapter_7_menu();
+			main = -1;
+			break;
 		default:
 			printf("\nCHAPTERS:\n");
 			printf("\t[Chapter 2] - Data parallel computing (vector addition)\n");
 			printf("\t[Chapter 3] - Scalable parallel execution (Image Grayscale and Blur)\n");
 			printf("\t[Chapter 4] - Memory and data locality (Matrix Multiplication)\n");
 			printf("\t[Chapter 5] - Performance considerations (Array reduction)\n");
+			printf("\t[Chapter 7] - Parallel patterns: convolution (1D and 2D convolution)\n");
 			printf("\nPress the chapter number or zero to exit.\n");
 			scanf("%d", &main);
 			setbuf(stdin, NULL);
