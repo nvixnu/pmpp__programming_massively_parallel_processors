@@ -13,18 +13,16 @@
 #define CHAPTER_3_H_
 
 #include "../utils.h"
+#include "../datasets_info.h"
 
-#define IMG_FOLDER "../datasets/images/"
+#define CH3__INPUT_FILE_GRAY IMG_GREEN_FIELD
+#define CH3__OUTPUT_HOST_FILE_GRAY IMG_FOLDER "green_field_host_gray.jpg"
+#define CH3__OUTPUT_DEVICE_FILE_GRAY IMG_FOLDER "green_field_device_gray.jpg"
 
-#define INPUT_FILE_GRAY IMG_FOLDER "green_field.jpg"
-#define OUTPUT_HOST_FILE_GRAY IMG_FOLDER "green_field_host_gray.jpg"
-#define OUTPUT_DEVICE_FILE_GRAY IMG_FOLDER "green_field_device_gray.jpg"
-
-#define INPUT_FILE_BLUR IMG_FOLDER "himalayan_brown_bear.jpg"
-#define OUTPUT_HOST_FILE_BLUR IMG_FOLDER "himalayan_brown_bear_host_blur.jpg"
-#define OUTPUT_DEVICE_FILE_BLUR IMG_FOLDER "himalayan_brown_bear_device_blur.jpg"
-
-#define BLUR_SIZE 16
+#define CH3__INPUT_FILE_BLUR IMG_BEAR
+#define CH3__OUTPUT_HOST_FILE_BLUR IMG_FOLDER "himalayan_brown_bear_host_blur.jpg"
+#define CH3__OUTPUT_DEVICE_FILE_BLUR IMG_FOLDER "himalayan_brown_bear_device_blur.jpg"
+#define CH3__BLUR_WIDTH 16
 
 /**
  * Converts a colored image to grayscale

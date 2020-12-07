@@ -63,13 +63,13 @@ static inline void chapter_3_menu(){
 static inline void chapter_4_menu(){
 	printf("Chapter 4\n");
 	printf("Running [matrix_mul] on Device with 256 threads per block...:\n");
-	ch4__matrix_mul(Device, {.block_dim = {16,16,1}, .kernel_version = MATRIX_MUL_KERNEL_NAIVE});
+	ch4__matrix_mul(Device, {.block_dim = {16,16,1}, .kernel_version = CH4__MATRIX_MUL_KERNEL_NAIVE});
 	printf("\nRunning [matrix_mul] on Device with 1024 threads per block...:\n");
-	ch4__matrix_mul(Device, {.block_dim = {32,32,1}, .kernel_version = MATRIX_MUL_KERNEL_NAIVE});
+	ch4__matrix_mul(Device, {.block_dim = {32,32,1}, .kernel_version = CH4__MATRIX_MUL_KERNEL_NAIVE});
 	printf("\nRunning [matrix_mul_tiled] on Device with 256 threads per block...:\n");
-	ch4__matrix_mul(Device, {.block_dim = {16,16,1}, .kernel_version = MATRIX_MUL_KERNEL_TILED});
+	ch4__matrix_mul(Device, {.block_dim = {16,16,1}, .kernel_version = CH4__MATRIX_MUL_KERNEL_TILED});
 	printf("\nRunning [matrix_mul_tiled] on Device with 1024 threads per block...:\n");
-	ch4__matrix_mul(Device, {.block_dim = {32,32,1}, .kernel_version = MATRIX_MUL_KERNEL_TILED});
+	ch4__matrix_mul(Device, {.block_dim = {32,32,1}, .kernel_version = CH4__MATRIX_MUL_KERNEL_TILED});
 	printf("\nRunning [matrix_mul] on Host...\n");
 	ch4__matrix_mul(Host, {});
 }

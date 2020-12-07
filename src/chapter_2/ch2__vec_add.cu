@@ -18,34 +18,34 @@
 #include "nvixnu__axpy.h"
 
 
-void ch2__vec_add_device(double *h_x, double *h_y, kernel_config_t config){
+void ch2__vec_add_device(double *h_x, double *h_y, const int length, kernel_config_t config){
 	// Pointers to device arrays
 	double *d_x, *d_y;
 
 	//Allocates the global memory
-	CCE(cudaMalloc(&d_x, N*sizeof(double)));
-	CCE(cudaMalloc(&d_y, N*sizeof(double)));
+	CCE(cudaMalloc(&d_x, length*sizeof(double)));
+	CCE(cudaMalloc(&d_y, length*sizeof(double)));
 
 	//Copies the arrays to GPU
-	CCE(cudaMemcpy(d_x, h_x, N*sizeof(double), cudaMemcpyHostToDevice));
-	CCE(cudaMemcpy(d_y, h_y, N*sizeof(double), cudaMemcpyHostToDevice));
+	CCE(cudaMemcpy(d_x, h_x, length*sizeof(double), cudaMemcpyHostToDevice));
+	CCE(cudaMemcpy(d_y, h_y, length*sizeof(double), cudaMemcpyHostToDevice));
 
 	DEVICE_TIC(0);
-	nvixnu__axpy_kernel<<<ceil(N/(double)config.block_dim.x), config.block_dim.x>>>(1.0, d_x, d_y, N);
+	nvixnu__axpy_kernel<<<ceil(length/(double)config.block_dim.x), config.block_dim.x>>>(1.0, d_x, d_y, length);
 	CCLE();
 	DEVICE_TOC(0);
 
 	//Copies the result back to the heap
-	CCE(cudaMemcpy(h_y, d_y, N*sizeof(double), cudaMemcpyDeviceToHost));
+	CCE(cudaMemcpy(h_y, d_y, length*sizeof(double), cudaMemcpyDeviceToHost));
 
 
 	CCE(cudaFree(d_x));
 	CCE(cudaFree(d_y));
 }
 
-void ch2__vec_add_host(double *x, double *y){
+void ch2__vec_add_host(double *x, double *y, const int length){
 	HOST_TIC(0);
-	nvixnu__axpy_host(1.0, x, y, N);
+	nvixnu__axpy_host(1.0, x, y, length);
 	HOST_TOC(0);
 }
 
@@ -54,20 +54,20 @@ void ch2__vec_add(env_e env, kernel_config_t config){
 	double *x, *y;
 
 	//Allocates the heap memory
-	x = (double*)malloc(N*sizeof(double));
-	y = (double*)malloc(N*sizeof(double));
+	x = (double*)malloc(CH2__ARRAY_LENGTH*sizeof(double));
+	y = (double*)malloc(CH2__ARRAY_LENGTH*sizeof(double));
 
 	//Populates the arrays
-	nvixnu__populate_multiple_arrays_from_file(FILEPATH, "", "%lf,", "", N, sizeof(double), 2, x, y);
+	nvixnu__populate_multiple_arrays_from_file(CH2__FILEPATH, "", "%lf,", "", CH2__ARRAY_LENGTH, sizeof(double), 2, x, y);
 
 	if(env == Host){
-		ch2__vec_add_host(x, y);
+		ch2__vec_add_host(x, y, CH2__ARRAY_LENGTH);
 	}else{
-		ch2__vec_add_device(x, y, config);
+		ch2__vec_add_device(x, y, CH2__ARRAY_LENGTH, config);
 	}
 
 	printf("Last %d values:\n", PRINT_LENGTH);
-	nvixnu__array_map(y + (N - PRINT_LENGTH), sizeof(double), PRINT_LENGTH, nvixnu__print_item_double);
+	nvixnu__array_map(y + (CH2__ARRAY_LENGTH - PRINT_LENGTH), sizeof(double), PRINT_LENGTH, nvixnu__print_item_double);
 
 	free(x);
 	free(y);

@@ -72,7 +72,7 @@ void ch3__color_to_grayscale_host(uchar *input, uchar *output, const int width, 
 
 void ch3__color_to_grayscale(env_e env, kernel_config_t config){
 	// reads the image file
-	Mat src = imread(INPUT_FILE_GRAY, IMREAD_COLOR);
+	Mat src = imread(CH3__INPUT_FILE_GRAY, IMREAD_COLOR);
 	// gets the total number of pixels
 	int length = src.rows*src.cols; //Or src.total()
 	// Pointers to pixel arrays
@@ -96,10 +96,10 @@ void ch3__color_to_grayscale(env_e env, kernel_config_t config){
 	//Lauch the color_to_grayscale function
 	if(env == Host){
 		ch3__color_to_grayscale_host(input, output, src.cols, src.rows);
-		output_filename = OUTPUT_HOST_FILE_GRAY;
+		output_filename = CH3__OUTPUT_HOST_FILE_GRAY;
 	}else{
 		ch3__color_to_grayscale_device(input, output, src.cols, src.rows, config);
-		output_filename = OUTPUT_DEVICE_FILE_GRAY;
+		output_filename = CH3__OUTPUT_DEVICE_FILE_GRAY;
 	}
 
 	//Copy the output pixel array to a destination Mat opject

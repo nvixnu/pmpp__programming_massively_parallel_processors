@@ -14,8 +14,8 @@
 #include "../utils.h"
 #include "../datasets_info.h" //Credit card dataset info
 
-#define FILEPATH CREDIT_CARD_DATASET_PATH
-#define N CREDIT_CARD_DATASET_LENGTH/2
+#define CH2__FILEPATH CREDIT_CARD_DATASET_PATH
+#define CH2__ARRAY_LENGTH CREDIT_CARD_DATASET_LENGTH/2
 
 /**
  * Performs the host and device vector addition

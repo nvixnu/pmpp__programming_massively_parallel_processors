@@ -17,6 +17,10 @@
 void ch4__matrix_mul_device(double *h_A, double *h_B, double *h_C, const int i_length, const int j_length, const int k_length, kernel_config_t config){
 	double *d_A, *d_B, *d_C;
 
+	const int A_LENGTH = i_length*j_length;
+	const int B_LENGTH = j_length*k_length;
+	const int C_LENGTH = i_length*k_length;
+
 	CCE(cudaMalloc(&d_A, A_LENGTH*sizeof(double)));
 	CCE(cudaMalloc(&d_B, B_LENGTH*sizeof(double)));
 	CCE(cudaMalloc(&d_C, C_LENGTH*sizeof(double)));
@@ -27,14 +31,14 @@ void ch4__matrix_mul_device(double *h_A, double *h_B, double *h_C, const int i_l
 	CCE(cudaMemcpy(d_C, h_C, C_LENGTH*sizeof(double), cudaMemcpyHostToDevice));
 
 	dim3 block_dim(config.block_dim.x, config.block_dim.y, 1);
-	dim3 grid_dim(ceil(K_LENGTH/(double)config.block_dim.x), ceil(I_LENGTH/(double)config.block_dim.y), 1);
+	dim3 grid_dim(ceil(k_length/(double)config.block_dim.x), ceil(i_length/(double)config.block_dim.y), 1);
 
 	DEVICE_TIC(0);
-	if(config.kernel_version == MATRIX_MUL_KERNEL_NAIVE){
-		nvixnu__gemm_kernel<<<grid_dim, block_dim>>>(d_A, d_B, d_C, I_LENGTH, J_LENGTH, K_LENGTH);
+	if(config.kernel_version == CH4__MATRIX_MUL_KERNEL_NAIVE){
+		nvixnu__gemm_kernel<<<grid_dim, block_dim>>>(d_A, d_B, d_C, i_length, j_length, k_length);
 	}else{
 		const int shared_memory_length = 2*config.block_dim.x*config.block_dim.y*sizeof(double);
-		nvixnu__tiled_gemm_kernel<<<grid_dim, block_dim, shared_memory_length>>>(d_A, d_B, d_C, I_LENGTH, J_LENGTH, K_LENGTH, config.block_dim.x);
+		nvixnu__tiled_gemm_kernel<<<grid_dim, block_dim, shared_memory_length>>>(d_A, d_B, d_C, i_length, j_length, k_length, config.block_dim.x);
 	}
 	CCLE();
 	DEVICE_TOC(0);
@@ -56,17 +60,21 @@ void ch4__matrix_mul_host(double *A, double *B, double *C, const int i_length, c
 void ch4__matrix_mul(env_e env, kernel_config_t config){
 	double *A, *B, *C;
 
+	const int A_LENGTH = CH4__I_LENGTH*CH4__J_LENGTH;
+	const int B_LENGTH = CH4__J_LENGTH*CH4__K_LENGTH;
+	const int C_LENGTH = CH4__I_LENGTH*CH4__K_LENGTH;
+
 	A = (double*)malloc(A_LENGTH*sizeof(double));
 	B = (double*)malloc(B_LENGTH*sizeof(double));
 	C = (double*)calloc(C_LENGTH, sizeof(double));
 
-	nvixnu__populate_array_from_file(MATRIX_A_PATH, "%lf,", A_LENGTH, sizeof(double), A);
-	nvixnu__populate_array_from_file(MATRIX_B_PATH, "%lf,", B_LENGTH, sizeof(double), B);
+	nvixnu__populate_array_from_file(CH4__MATRIX_A_PATH, "%lf,", A_LENGTH, sizeof(double), A);
+	nvixnu__populate_array_from_file(CH4__MATRIX_B_PATH, "%lf,", B_LENGTH, sizeof(double), B);
 
 	if(env == Host){
-		ch4__matrix_mul_host(A, B, C, I_LENGTH, J_LENGTH, K_LENGTH);
+		ch4__matrix_mul_host(A, B, C, CH4__I_LENGTH, CH4__J_LENGTH, CH4__K_LENGTH);
 	}else{
-		ch4__matrix_mul_device(A, B, C, I_LENGTH, J_LENGTH, K_LENGTH, config);
+		ch4__matrix_mul_device(A, B, C, CH4__I_LENGTH, CH4__J_LENGTH, CH4__K_LENGTH, config);
 	}
 
 
