@@ -14,6 +14,7 @@
 #include "chapter_4/chapter_4.h"
 #include "chapter_5/chapter_5.h"
 #include "chapter_7/chapter_7.h"
+#include "chapter_8/chapter_8.h"
 #include "utils.h"
 
 
@@ -118,6 +119,16 @@ static inline void chapter_7_menu(){
 	}
 }
 
+static inline void chapter_8_menu(){
+//	printf("Chapter 8\n");
+//	printf("Running [ch8__prefix_sum] on Device with 256 threads per block...:\n");
+//	ch8__prefix_sum(Device, {.block_dim = {256,1,1}});
+//	printf("\nRunning [ch8__prefix_sum] on Device with 1024 threads per block...:\n");
+//	ch8__prefix_sum(Device, {.block_dim = {1024,1,1}});
+	printf("\nRunning [ch8__prefix_sum] on Host...\n");
+	ch8__prefix_sum(Host, {});
+}
+
 
 int main(void){
 
@@ -145,6 +156,10 @@ int main(void){
 			chapter_7_menu();
 			main = -1;
 			break;
+		case 8:
+			chapter_8_menu();
+			main = -1;
+			break;
 		default:
 			printf("\nCHAPTERS:\n");
 			printf("\t[Chapter 2] - Data parallel computing (vector addition)\n");
@@ -152,6 +167,7 @@ int main(void){
 			printf("\t[Chapter 4] - Memory and data locality (Matrix Multiplication)\n");
 			printf("\t[Chapter 5] - Performance considerations (Array reduction)\n");
 			printf("\t[Chapter 7] - Parallel patterns: convolution (1D and 2D convolution)\n");
+			printf("\t[Chapter 8] - Parallel patterns: prefix sum (Sequantial, Kogge-Stone and Brent-Kung)\n");
 			printf("\nPress the chapter number or zero to exit.\n");
 			scanf("%d", &main);
 			setbuf(stdin, NULL);

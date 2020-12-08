@@ -36,9 +36,11 @@ void ch4__matrix_mul_device(double *h_A, double *h_B, double *h_C, const int i_l
 	DEVICE_TIC(0);
 	if(config.kernel_version == CH4__MATRIX_MUL_KERNEL_NAIVE){
 		nvixnu__gemm_kernel<<<grid_dim, block_dim>>>(d_A, d_B, d_C, i_length, j_length, k_length);
-	}else{
+	}else if(config.kernel_version == CH4__MATRIX_MUL_KERNEL_TILED){
 		const int shared_memory_length = 2*config.block_dim.x*config.block_dim.y*sizeof(double);
 		nvixnu__tiled_gemm_kernel<<<grid_dim, block_dim, shared_memory_length>>>(d_A, d_B, d_C, i_length, j_length, k_length, config.block_dim.x);
+	}else{
+		printf("\nINVALID KERNEL VERSION\n");
 	}
 	CCLE();
 	DEVICE_TOC(0);
