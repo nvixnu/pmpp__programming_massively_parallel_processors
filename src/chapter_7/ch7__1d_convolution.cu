@@ -15,7 +15,8 @@
 #include "nvixnu__error_utils.h"
 #include "nvixnu__convolution.h"
 
-void ch7__convolution_1d_device(double *h_input, double *h_output, const int length, const double *h_mask, const int mask_width, kernel_config_t config){
+
+void ch7__1d_convolution_device(double *h_input, double *h_output, const int length, const double *h_mask, const int mask_width, kernel_config_t config){
 	double *d_input, *d_output, *d_mask;
 
 	CCE(cudaMalloc(&d_input, length*sizeof(double)));
@@ -40,13 +41,13 @@ void ch7__convolution_1d_device(double *h_input, double *h_output, const int len
 
 }
 
-void ch7__convolution_1d_host(double *input, double *output, const int length, const double *mask, const int mask_width){
+void ch7__1d_convolution_host(double *input, double *output, const int length, const double *mask, const int mask_width){
 	HOST_TIC(0);
 	nvixnu__1d_convolution_host(input, output, length, mask, mask_width);
 	HOST_TOC(0);
 }
 
-void ch7__convolution_1d(env_e env, kernel_config_t config){
+void ch7__1d_convolution(env_e env, kernel_config_t config){
 	double *input, *output;
 	const double mask[CH7__1D_MASK_WIDTH] = {1, 0, -1};
 
@@ -56,9 +57,9 @@ void ch7__convolution_1d(env_e env, kernel_config_t config){
 	nvixnu__populate_array_from_file(CH7__1D_FILEPATH, "%lf,", CH7__1D_ARRAY_LENGTH, sizeof(double), input);
 
 	if(env == Host){
-		ch7__convolution_1d_host(input, output, CH7__1D_ARRAY_LENGTH, mask, CH7__1D_MASK_WIDTH);
+		ch7__1d_convolution_host(input, output, CH7__1D_ARRAY_LENGTH, mask, CH7__1D_MASK_WIDTH);
 	}else{
-		ch7__convolution_1d_device(input, output, CH7__1D_ARRAY_LENGTH, mask, CH7__1D_MASK_WIDTH, config);
+		ch7__1d_convolution_device(input, output, CH7__1D_ARRAY_LENGTH, mask, CH7__1D_MASK_WIDTH, config);
 	}
 
 	printf("Last %d values:\n", PRINT_LENGTH);

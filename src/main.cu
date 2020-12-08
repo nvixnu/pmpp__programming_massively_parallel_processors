@@ -91,21 +91,21 @@ static inline void chapter_7_menu(){
 		printf("\nCHAPTER 7:\n");
 		switch(option){
 		case 1:
-			printf("Running [ch7__convolution_1d] on Device with 256 threads per block...:\n");
-			ch7__convolution_1d(Device, {.block_dim = {16,16,1}});
-			printf("\nRunning [ch7__convolution_1d] on Device with 1024 threads per block...:\n");
-			ch7__convolution_1d(Device, {.block_dim = {32,32,1}});
-			printf("\nRunning [ch7__convolution_1d] on Host...\n");
-			ch7__convolution_1d(Host, {});
+			printf("Running [ch7__1d_convolution] on Device with 256 threads per block...:\n");
+			ch7__1d_convolution(Device, {.block_dim = {256,1,1}});
+			printf("\nRunning [ch7__1d_convolution] on Device with 1024 threads per block...:\n");
+			ch7__1d_convolution(Device, {.block_dim = {1024,1,1}});
+			printf("\nRunning [ch7__1d_convolution] on Host...\n");
+			ch7__1d_convolution(Host, {});
 			option = -1;
 			break;
 		case 2:
-//			printf("Running [ch7__convolution_2d] on Device with 256 threads per block...:\n");
-//			ch7__convolution_2d(Device, {.block_dim = {16,16,1}});
-//			printf("\nRunning [ch7__convolution_2d] on Device with 1024 threads per block...:\n");
-//			ch3ch7__convolution_2d__blur(Device, {.block_dim = {32,32,1}});
-//			printf("\nRunning [ch7__convolution_2d] on Host...\n");
-//			ch7__convolution_2d(Host, {});
+			printf("Running [ch7__2d_convolution] on Device with 256 threads per block...:\n");
+			ch7__2d_convolution(Device, {.block_dim = {16,16,1}});
+			printf("\nRunning [ch7__2d_convolution] on Device with 1024 threads per block...:\n");
+			ch7__2d_convolution(Device, {.block_dim = {32,32,1}});
+			printf("\nRunning [ch7__2d_convolution] on Host...\n");
+			ch7__2d_convolution(Host, {});
 			option = -1;
 			break;
 		default:
