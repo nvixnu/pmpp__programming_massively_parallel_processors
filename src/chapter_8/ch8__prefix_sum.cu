@@ -9,6 +9,7 @@
  */
 
 #include <stdio.h>
+#include <string.h>
 #include <math.h>
 #include "chapter_8.h"
 #include "nvixnu__array_utils.h"
@@ -50,6 +51,9 @@ void brent_kung_scan_by_block(double *input, double *output, const int length, d
         section_sums[threadIdx.x] = input[tid];
     }
 
+    __syncthreads();
+
+
     for(unsigned int stride = 1; stride < blockDim.x; stride *= 2){
         __syncthreads();
         int idx = (threadIdx.x + 1) * 2 * stride - 1;
@@ -87,14 +91,14 @@ void ch8__prefix_sum_device(double *h_input, double *h_output, const int length,
 	const int shared_memory = block_dim*sizeof(double);
 
 	DEVICE_TIC(0);
-	if(config.kernel_version == CH8__PREFIX_SUM_KOGGE_STONE){
+	if(!strcmp(config.kernel_version, CH8__PREFIX_SUM_KOGGE_STONE)){
 		kogge_stone_scan_by_block<<<grid_dim, block_dim, shared_memory>>>(d_input, d_output, length, NULL);
-	}else if(config.kernel_version == CH8__PREFIX_SUM_BRENT_KUNG){
+	}else if(!strcmp(config.kernel_version, CH8__PREFIX_SUM_BRENT_KUNG)){
 		brent_kung_scan_by_block<<<grid_dim, block_dim, shared_memory>>>(d_input, d_output, length, NULL);
 	}else{
 		printf("\nINVALID KERNEL VERSION\n");
 	}
-
+	CCLE();
 	DEVICE_TOC(0);
 
 	CCE(cudaMemcpy(h_output, d_output, length*sizeof(double), cudaMemcpyDeviceToHost));

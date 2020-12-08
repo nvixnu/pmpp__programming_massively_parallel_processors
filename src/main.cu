@@ -120,11 +120,15 @@ static inline void chapter_7_menu(){
 }
 
 static inline void chapter_8_menu(){
-//	printf("Chapter 8\n");
-//	printf("Running [ch8__prefix_sum] on Device with 256 threads per block...:\n");
-//	ch8__prefix_sum(Device, {.block_dim = {256,1,1}});
-//	printf("\nRunning [ch8__prefix_sum] on Device with 1024 threads per block...:\n");
-//	ch8__prefix_sum(Device, {.block_dim = {1024,1,1}});
+	printf("Chapter 8\n");
+	printf("Running [ch8__prefix_sum Kogge-Stone] on Device with 256 threads per block...:\n");
+	ch8__prefix_sum(Device, {.block_dim = {256,1,1}, .kernel_version = CH8__PREFIX_SUM_KOGGE_STONE});
+	printf("Running [ch8__prefix_sum Brent-Kung] on Device with 256 threads per block...:\n");
+	ch8__prefix_sum(Device, {.block_dim = {256,1,1}, .kernel_version = CH8__PREFIX_SUM_BRENT_KUNG});
+	printf("\nRunning [ch8__prefix_sum Kogge-Stone] on Device with 1024 threads per block...:\n");
+	ch8__prefix_sum(Device, {.block_dim = {1024,1,1}, .kernel_version = CH8__PREFIX_SUM_KOGGE_STONE});
+	printf("\nRunning [ch8__prefix_sum Brent-Kung] on Device with 1024 threads per block...:\n");
+	ch8__prefix_sum(Device, {.block_dim = {1024,1,1}, .kernel_version = CH8__PREFIX_SUM_BRENT_KUNG});
 	printf("\nRunning [ch8__prefix_sum] on Host...\n");
 	ch8__prefix_sum(Host, {});
 }
