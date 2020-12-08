@@ -1,13 +1,3 @@
-/*
- * Programming Massively Parallel Processors - 3ed
- * Chapter 2
- * In this chapter the vector addition and the error handlers functions are presented.
- * The "nvixnu__" libraries used here are available at https://gist.github.com/nvixnu.
- *
- *  Created on: 27/11/2020
- *  Author: Nvixnu
- */
-
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
