@@ -15,7 +15,7 @@
 #include "../datasets_info.h" //Credit card dataset info
 
 #define CH8__FILEPATH CREDIT_CARD_DATASET_PATH
-#define CH8__ARRAY_LENGTH 8
+#define CH8__ARRAY_LENGTH CREDIT_CARD_DATASET_LENGTH
 
 #define CH8__PREFIX_SUM_KOGGE_STONE "KOGGE_STONE"
 #define CH8__PREFIX_SUM_BRENT_KUNG "BRENT_KUNG"

@@ -18,7 +18,7 @@
 
 
 __global__
-void kogge_stone_scan_by_block(double *input, double *output, const int length, double *last_sum){
+void ch8__kogge_stone_scan_by_block_kernel(double *input, double *output, const int length, double *last_sum){
     extern __shared__ double section_sums[];
 
     int tid = blockIdx.x*blockDim.x + threadIdx.x;
@@ -42,7 +42,7 @@ void kogge_stone_scan_by_block(double *input, double *output, const int length, 
 }
 
 __global__
-void brent_kung_scan_by_block(double *input, double *output, const int length, double *last_sum){
+void ch8__brent_kung_scan_by_block_kernel(double *input, double *output, const int length, double *last_sum){
     extern __shared__ double section_sums[];
 
     int tid = blockIdx.x*blockDim.x + threadIdx.x;
@@ -77,28 +77,54 @@ void brent_kung_scan_by_block(double *input, double *output, const int length, d
     }
 }
 
+__global__
+void ch8__increment_section_kernel(double *base, double * output, const int length){
+    int tid = blockIdx.x * blockDim.x + threadIdx.x;
+
+    if(tid < length && blockIdx.x > 0){
+        output[tid] += base[blockIdx.x -1];
+    }
+}
+
 void ch8__prefix_sum_device(double *h_input, double *h_output, const int length, kernel_config_t config){
-	double *d_input, *d_output;
-
-	CCE(cudaMalloc(&d_input, length*sizeof(double)));
-	CCE(cudaMalloc(&d_output, length*sizeof(double)));
-
-	CCE(cudaMemcpy(d_input, h_input, length*sizeof(double), cudaMemcpyHostToDevice));
-	CCE(cudaMemcpy(d_output, h_output, length*sizeof(double), cudaMemcpyHostToDevice));
+	double *d_input, *d_output, *d_block_sum;
 
 	const int block_dim = config.block_dim.x;
 	const int grid_dim = ceil(length/(double)block_dim);
 	const int shared_memory = block_dim*sizeof(double);
+	const int block_dim_step_2 = grid_dim > 1024 ? 1024 : (ceil(grid_dim/32.0)*32);
+	const int grid_dim_step_2 = ceil(grid_dim/(double)block_dim_step_2);
+
+	CCE(cudaMalloc(&d_input, length*sizeof(double)));
+	CCE(cudaMalloc(&d_output, length*sizeof(double)));
+	CCE(cudaMalloc(&d_block_sum, grid_dim*sizeof(double)));
+
+	CCE(cudaMemcpy(d_input, h_input, length*sizeof(double), cudaMemcpyHostToDevice));
+	CCE(cudaMemcpy(d_output, h_output, length*sizeof(double), cudaMemcpyHostToDevice));
+
 
 	DEVICE_TIC(0);
 	if(!strcmp(config.kernel_version, CH8__PREFIX_SUM_KOGGE_STONE)){
-		kogge_stone_scan_by_block<<<grid_dim, block_dim, shared_memory>>>(d_input, d_output, length, NULL);
+		// Performs the parallel scan in each block
+		ch8__kogge_stone_scan_by_block_kernel<<<grid_dim, block_dim, shared_memory>>>(d_input, d_output, length, d_block_sum);
+		CCLE();
+		CCE(cudaDeviceSynchronize());
+		ch8__kogge_stone_scan_by_block_kernel<<<grid_dim_step_2, block_dim_step_2, block_dim_step_2*sizeof(double)>>>(d_block_sum, d_block_sum, grid_dim, NULL);
 	}else if(!strcmp(config.kernel_version, CH8__PREFIX_SUM_BRENT_KUNG)){
-		brent_kung_scan_by_block<<<grid_dim, block_dim, shared_memory>>>(d_input, d_output, length, NULL);
+		// Performs the parallel scan in each block
+		ch8__brent_kung_scan_by_block_kernel<<<grid_dim, block_dim, shared_memory>>>(d_input, d_output, length, d_block_sum);
+		CCLE();
+		CCE(cudaDeviceSynchronize());
+		ch8__brent_kung_scan_by_block_kernel<<<grid_dim_step_2, block_dim_step_2, block_dim_step_2*sizeof(double)>>>(d_block_sum, d_block_sum, grid_dim, NULL);
 	}else{
 		printf("\nINVALID KERNEL VERSION\n");
 	}
 	CCLE();
+	CCE(cudaDeviceSynchronize());
+	ch8__increment_section_kernel<<<grid_dim, block_dim>>>(d_block_sum, d_output, length);
+	CCLE();
+	CCE(cudaDeviceSynchronize());
+
 	DEVICE_TOC(0);
 
 	CCE(cudaMemcpy(h_output, d_output, length*sizeof(double), cudaMemcpyDeviceToHost));
