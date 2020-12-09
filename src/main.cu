@@ -9,12 +9,12 @@
  */
 
 #include <stdio.h>
-#include "chapter_2/chapter_2.h"
-#include "chapter_3/chapter_3.h"
-#include "chapter_4/chapter_4.h"
-#include "chapter_5/chapter_5.h"
-#include "chapter_7/chapter_7.h"
-#include "chapter_8/chapter_8.h"
+#include "chapter_2/ch2__config.h"
+#include "chapter_3/ch3__config.h"
+#include "chapter_4/ch4__config.h"
+#include "chapter_5/ch5__config.h"
+#include "chapter_7/ch7__config.h"
+#include "chapter_8/ch8__config.h"
 #include "utils.h"
 
 

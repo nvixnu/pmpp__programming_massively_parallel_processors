@@ -9,7 +9,7 @@
  */
 
 #include <stdio.h>
-#include "chapter_7.h"
+#include "ch7__config.h"
 #include "nvixnu__populate_arrays_utils.h"
 #include "nvixnu__array_utils.h"
 #include "nvixnu__error_utils.h"

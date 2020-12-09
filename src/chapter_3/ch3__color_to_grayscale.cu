@@ -10,7 +10,7 @@
 
 #include <stdio.h>
 #include <time.h>
-#include "chapter_3.h"
+#include "ch3__config.h"
 
 #include <opencv2/core.hpp>
 #include <opencv2/imgcodecs.hpp>

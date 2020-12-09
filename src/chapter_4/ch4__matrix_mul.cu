@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
-#include "chapter_4.h"
+#include "ch4__config.h"
 #include "nvixnu__populate_arrays_utils.h"
 #include "nvixnu__array_utils.h"
 #include "nvixnu__error_utils.h"

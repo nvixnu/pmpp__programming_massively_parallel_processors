@@ -11,7 +11,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
-#include "chapter_8.h"
+#include "ch8__config.h"
 #include "nvixnu__array_utils.h"
 #include "nvixnu__populate_arrays_utils.h"
 #include "nvixnu__error_utils.h"

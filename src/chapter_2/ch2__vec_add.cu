@@ -11,7 +11,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
-#include "chapter_2.h"
+#include "ch2__config.h"
 #include "nvixnu__array_utils.h" //Map and print functions
 #include "nvixnu__error_utils.h"
 #include "nvixnu__populate_arrays_utils.h"
