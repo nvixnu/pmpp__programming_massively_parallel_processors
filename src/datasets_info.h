@@ -10,7 +10,7 @@
 
 #include "utils.h"
 
-#define PRINT_LENGTH 10
+#define PRINT_LENGTH 5
 
 #define CREDIT_CARD_DATASET_ROWS 284807
 #define CREDIT_CARD_DATASET_COLS 28
