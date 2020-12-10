@@ -128,9 +128,21 @@ void ch8__brent_kung_3_phase_scan_by_block_kernel(double *input, double *output,
 }
 
 
-void ch8__partial_prefix_sum_host(double *input, double *output, const int length, const int stride){
+/**
+ * This partial (or sectioned) host version is only for comparison purpose with the partial scan kernels
+ */
+void ch8__partial_prefix_sum_host(double *input, double *output, const int length, const int stride, const int section_size){
+	const int regular_sections_count = length/section_size;
+	const int regular_sections_length = regular_sections_count*section_size;
+	const int last_section_length = length - regular_sections_length;
 	HOST_TIC(0);
-	ch8__partial_prefix_sum_unit(input, output, length, stride);
+	for(int i = 0; i < regular_sections_count; i++){
+		ch8__partial_prefix_sum_unit(input + i, output + i, section_size, stride);
+	}
+	if(last_section_length > 0){
+		ch8__partial_prefix_sum_unit(input + regular_sections_length, output + regular_sections_length, last_section_length, stride);
+	}
+
 	HOST_TOC(0)
 }
 
@@ -177,20 +189,20 @@ void ch8__partial_prefix_sum_device(double *h_input, double *h_output, const int
 void ch8__partial_prefix_sum(env_e env, kernel_config_t config){
 	double *input, *output;
 
-	input = (double *)malloc(CH8__ARRAY_LENGTH*sizeof(double));
-	output = (double *)calloc(CH8__ARRAY_LENGTH, sizeof(double));
+	input = (double *)malloc(CH8__ARRAY_LENGTH_FOR_PARTIAL_SCAN*sizeof(double));
+	output = (double *)calloc(CH8__ARRAY_LENGTH_FOR_PARTIAL_SCAN, sizeof(double));
 
-	nvixnu__populate_array_from_file(CH8__FILEPATH, "%lf,", CH8__ARRAY_LENGTH, sizeof(double), input);
+	nvixnu__populate_array_from_file(CH8__FILEPATH, "%lf,", CH8__ARRAY_LENGTH_FOR_PARTIAL_SCAN, sizeof(double), input);
 
 
 	if(env == Host){
-		ch8__partial_prefix_sum_host(input, output, CH8__ARRAY_LENGTH, 1);
+		ch8__partial_prefix_sum_host(input, output, CH8__ARRAY_LENGTH_FOR_PARTIAL_SCAN, 1, config.block_dim.x);
 	}else{
-		ch8__partial_prefix_sum_device(input, output, CH8__ARRAY_LENGTH, config);
+		ch8__partial_prefix_sum_device(input, output, CH8__ARRAY_LENGTH_FOR_PARTIAL_SCAN, config);
 	}
 
 	printf("Last %d values:\n", PRINT_LENGTH);
-	nvixnu__array_map(output + (CH8__ARRAY_LENGTH - PRINT_LENGTH), sizeof(double), PRINT_LENGTH, nvixnu__print_item_double);
+	nvixnu__array_map(output + (CH8__ARRAY_LENGTH_FOR_PARTIAL_SCAN - PRINT_LENGTH), sizeof(double), PRINT_LENGTH, nvixnu__print_item_double);
 
 
 

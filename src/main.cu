@@ -141,7 +141,7 @@ static inline void chapter_8_menu(){
 		printf("\nCHAPTER 8:\n");
 		switch(option){
 		case 1:
-			printf("Chapter 8\n CH8__ARRAY_LENGTH: %d\n", CH8__ARRAY_LENGTH);
+			printf("Chapter 8\n CH8__ARRAY_LENGTH_FOR_PARTIAL_SCAN: %d\n", CH8__ARRAY_LENGTH_FOR_PARTIAL_SCAN);
 
 			printf("\nRunning [ch8__partial_prefix_sum Kogge-Stone] on Device with 1024 threads per block...:\n");
 			ch8__partial_prefix_sum(Device, {.block_dim = {1024,1,1}, .kernel_version = CH8__PREFIX_SUM_KOGGE_STONE});
