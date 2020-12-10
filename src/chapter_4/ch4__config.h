@@ -24,7 +24,10 @@
 
 
 /**
- * Performs the host and device matrix multiplication (MATRIX_MUL_KERNEL_NAIVE and MATRIX_MUL_KERNEL_NAIVE versions)
+ * Performs the host and device matrix multiplication
+ * The config.kernel_version param values are:
+ * 	MATRIX_MUL_KERNEL_NAIVE: Performs the naive (straightforward) version of matrix multiplication
+ * 	MATRIX_MUL_KERNEL_TILED: Performs the tiled version of matrix multiplication
  * @para env Environment to run on (Host or Device)
  * @param config Kernel configuration parameters such as the block dimension (Number of threads per block)
  */

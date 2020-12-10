@@ -35,6 +35,7 @@ void ch8__kogge_stone_scan_by_block_kernel(double *input, double *output, const 
 
 	int tid = blockIdx.x*blockDim.x + threadIdx.x;
 
+
 	if(tid < length){
 		section_sums[threadIdx.x] = input[tid];
 	}
@@ -46,7 +47,6 @@ void ch8__kogge_stone_scan_by_block_kernel(double *input, double *output, const 
 			section_sums[threadIdx.x] += section_sums[threadIdx.x - stride];
 		}
 	}
-	__syncthreads();
 	output[tid] = section_sums[threadIdx.x];
 	if(last_sum != NULL && threadIdx.x == (blockDim.x - 1)){
 		last_sum[blockIdx.x] = section_sums[threadIdx.x];
@@ -136,17 +136,14 @@ void ch8__partial_prefix_sum_host(double *input, double *output, const int lengt
 
 
 void ch8__partial_prefix_sum_device(double *h_input, double *h_output, const int length, kernel_config_t config){
-	double *d_input, *d_output, *d_block_sum;
+	double *d_input, *d_output;
 
 	const int block_dim = config.block_dim.x;
 	const int grid_dim = ceil(length/(double)block_dim);
 	const int shared_memory = block_dim*sizeof(double);
-	const int block_dim_step_2 = grid_dim > 1024 ? 1024 : (ceil(grid_dim/32.0)*32);
-	const int grid_dim_step_2 = ceil(grid_dim/(double)block_dim_step_2);
 
 	CCE(cudaMalloc(&d_input, length*sizeof(double)));
 	CCE(cudaMalloc(&d_output, length*sizeof(double)));
-	CCE(cudaMalloc(&d_block_sum, grid_dim*sizeof(double)));
 
 	CCE(cudaMemcpy(d_input, h_input, length*sizeof(double), cudaMemcpyHostToDevice));
 	CCE(cudaMemcpy(d_output, h_output, length*sizeof(double), cudaMemcpyHostToDevice));
@@ -154,9 +151,9 @@ void ch8__partial_prefix_sum_device(double *h_input, double *h_output, const int
 
 	DEVICE_TIC(0);
 	if(!strcmp(config.kernel_version, CH8__PREFIX_SUM_KOGGE_STONE)){
-		ch8__kogge_stone_scan_by_block_kernel<<<grid_dim, block_dim, shared_memory>>>(d_input, d_output, length, d_block_sum);
+		ch8__kogge_stone_scan_by_block_kernel<<<grid_dim, block_dim, shared_memory>>>(d_input, d_output, length, NULL);
 	}else if(!strcmp(config.kernel_version, CH8__PREFIX_SUM_BRENT_KUNG)){
-		ch8__brent_kung_scan_by_block_kernel<<<grid_dim, block_dim, shared_memory>>>(d_input, d_output, length, d_block_sum);
+		ch8__brent_kung_scan_by_block_kernel<<<grid_dim, block_dim, shared_memory>>>(d_input, d_output, length, NULL);
 	}else if(!strcmp(config.kernel_version, CH8__PREFIX_SUM_BRENT_KUNG_3_PHASE)){
 		//cudaDeviceProp device_props =  nvixnu__get_cuda_device_props(0);
 		//size_t max_shared_mem = device_props.sharedMemPerBlock;
@@ -194,6 +191,7 @@ void ch8__partial_prefix_sum(env_e env, kernel_config_t config){
 
 	printf("Last %d values:\n", PRINT_LENGTH);
 	nvixnu__array_map(output + (CH8__ARRAY_LENGTH - PRINT_LENGTH), sizeof(double), PRINT_LENGTH, nvixnu__print_item_double);
+
 
 
 	free(input);
