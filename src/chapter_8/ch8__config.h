@@ -16,10 +16,12 @@
 
 #define CH8__FILEPATH CREDIT_CARD_DATASET_PATH
 #define CH8__ARRAY_LENGTH_FOR_PARTIAL_SCAN CREDIT_CARD_DATASET_LENGTH
+#define CH8__ARRAY_LENGTH_FOR_FULL_SCAN CREDIT_CARD_DATASET_LENGTH
 
 #define CH8__PREFIX_SUM_KOGGE_STONE "KOGGE_STONE"
 #define CH8__PREFIX_SUM_BRENT_KUNG "BRENT_KUNG"
 #define CH8__PREFIX_SUM_KOGGE_STONE_3_PHASE "KOGGE_STONE_3_PHASE"
+#define CH8__HIERARCHICAL_PREFIX_SUM_KOGGE_STONE "HIERARCHICAL_KOGGE_STONE"
 
 /**
  * Performs the prefix sum by sections on host and device.
@@ -43,6 +45,5 @@ void ch8__partial_prefix_sum(env_e env, kernel_config_t config, const int host_s
  * @param config Kernel configuration parameters such as the block dimension (Number of threads per block)
  */
 void ch8__full_prefix_sum(env_e env, kernel_config_t config);
-
 
 #endif /* CHAPTER_8_H_ */
