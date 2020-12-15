@@ -141,42 +141,39 @@ static inline void chapter_8_menu(){
 	//Gets the max length of shared memory to use as SECTION_SIZE of the 3-phase algorithm
 	cudaDeviceProp device_props =  nvixnu__get_cuda_device_props(0);
 	const int memory_bound_section_size = device_props.sharedMemPerBlock;
-
-	const int thread_bound_section_size = device_props.maxThreadsDim[0];
+	const int thread_bound_section_length = device_props.maxThreadsDim[0];
 
 	while(option != 0){
 		printf("\nCHAPTER 8:\n");
 		switch(option){
 		case 1:
-			printf("Chapter 8\n CH8__ARRAY_LENGTH_FOR_PARTIAL_SCAN: %d\n", CH8__ARRAY_LENGTH_FOR_PARTIAL_SCAN);
+			printf("CH8__ARRAY_LENGTH_FOR_PARTIAL_SCAN: %d\n", CH8__ARRAY_LENGTH_FOR_PARTIAL_SCAN);
 
 			printf("\nRunning [ch8__partial_prefix_sum Kogge-Stone] on Device with 1024 threads per block...:\n");
-			ch8__partial_prefix_sum(Device, {.block_dim = {thread_bound_section_size,1,1}, .kernel_version = CH8__PREFIX_SUM_KOGGE_STONE});
+			ch8__partial_prefix_sum(Device, {
+					.block_dim = {thread_bound_section_length,1,1},
+					.kernel_version = CH8__PREFIX_SUM_KOGGE_STONE
+			}, 0);
 
 			printf("\nRunning [ch8__partial_prefix_sum Brent-Kung] on Device with 1024 threads per block...:\n");
-			ch8__partial_prefix_sum(Device, {.block_dim = {thread_bound_section_size,1,1}, .kernel_version = CH8__PREFIX_SUM_BRENT_KUNG});
+			ch8__partial_prefix_sum(Device, {
+					.block_dim = {thread_bound_section_length,1,1},
+					.kernel_version = CH8__PREFIX_SUM_BRENT_KUNG
+			}, 0);
 
 			printf("\nRunning [ch8__partial_prefix_sum for Kogge-Stone/Brent-Kung comparison] on Host...\n");
-			ch8__partial_prefix_sum(Host, {
-					.block_dim = {},
-					.kernel_version = "",
-					.shared_memory_length = thread_bound_section_size
-			});
+			ch8__partial_prefix_sum(Host, {}, thread_bound_section_length);
 
 			printf("\nRunning [ch8__partial_prefix_sum 3 phase Kogge-Stone] on Device with 1024 threads per block...:\n");
 			ch8__partial_prefix_sum(Device, {
-					.block_dim = {1024,1,1},
+					.block_dim = {thread_bound_section_length,1,1},
 					.kernel_version = CH8__PREFIX_SUM_KOGGE_STONE_3_PHASE,
 					.shared_memory_length = memory_bound_section_size
-			});
+			}, 0);
 
 
 			printf("\nRunning [ch8__partial_prefix_sum for 3 phase Kogge-Stone comparison] on Host...\n");
-			ch8__partial_prefix_sum(Host, {
-					.block_dim = {},
-					.kernel_version = "",
-					.shared_memory_length = memory_bound_section_size
-			});
+			ch8__partial_prefix_sum(Host, {}, memory_bound_section_size/sizeof(double));
 
 
 			option = -1;

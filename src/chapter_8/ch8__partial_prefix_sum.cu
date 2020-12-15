@@ -219,18 +219,16 @@ void ch8__partial_prefix_sum_device(double *h_input, double *h_output, const int
 }
 
 
-void ch8__partial_prefix_sum(env_e env, kernel_config_t config){
+void ch8__partial_prefix_sum(env_e env, kernel_config_t config, const int section_length){
 	double *input, *output;
 
 	input = (double *)malloc(CH8__ARRAY_LENGTH_FOR_PARTIAL_SCAN*sizeof(double));
 	output = (double *)calloc(CH8__ARRAY_LENGTH_FOR_PARTIAL_SCAN, sizeof(double));
 
-
 	nvixnu__populate_array_from_file(CH8__FILEPATH, "%lf,", CH8__ARRAY_LENGTH_FOR_PARTIAL_SCAN, sizeof(double), input);
 
 
 	if(env == Host){
-		const int section_length = config.shared_memory_length/sizeof(double);
 		ch8__partial_prefix_sum_host(input, output, CH8__ARRAY_LENGTH_FOR_PARTIAL_SCAN, 1, section_length);
 	}else{
 		ch8__partial_prefix_sum_device(input, output, CH8__ARRAY_LENGTH_FOR_PARTIAL_SCAN, config);

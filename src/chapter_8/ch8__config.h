@@ -31,8 +31,9 @@
  * 	CH8__PREFIX_SUM_BRENT_KUNG_3_PHASE: Three phase Brent-Kung inclusive section scan (sharedMemPerBlock bound)
  * @param env Environment to run on (Host or Device)
  * @param config Kernel configuration parameters such as the block dimension (Number of threads per block)
+ * @param host_section_length Specify the host section lenght in order to emulate the device constraints (Limited amount of threads and shared memory)
  */
-void ch8__partial_prefix_sum(env_e env, kernel_config_t config);
+void ch8__partial_prefix_sum(env_e env, kernel_config_t config, const int host_section_length);
 
 /**
  * Performs the prefix sum on host and device.
