@@ -33,7 +33,7 @@ void ch8__full_prefix_sum_device(double *h_input, double *h_output, const int le
 	const int grid_dim = ceil(length/(double)block_dim);
 	const int shared_memory = block_dim*sizeof(double);
 
-	const int block_dim_step_2 = grid_dim > 1024 ? 1024 : (ceil(grid_dim/32.0)*32);
+	const int block_dim_step_2 = grid_dim >= 1024 ? 1024 : (ceil(grid_dim/32.0)*32);
 	const int grid_dim_step_2 = ceil(grid_dim/(double)block_dim_step_2);
 	const int shared_memory_step_2 = block_dim_step_2*sizeof(double);
 
@@ -51,14 +51,29 @@ void ch8__full_prefix_sum_device(double *h_input, double *h_output, const int le
 		CCLE();
 		CCE(cudaDeviceSynchronize());
 		nvixnu__kogge_stone_scan_by_block_kernel<<<grid_dim_step_2, block_dim_step_2, shared_memory_step_2>>>(d_block_sum, d_block_sum, grid_dim, NULL);
+	}else if(!strcmp(config.kernel_version, CH8__HIERARCHICAL_PREFIX_SUM_BRENT_KUNG)){
+		nvixnu__brent_kung_scan_by_block_kernel<<<grid_dim, block_dim, shared_memory>>>(d_input, d_output, length, d_block_sum);
 		CCLE();
 		CCE(cudaDeviceSynchronize());
-		ch8__increment_section<<<grid_dim, block_dim>>>(d_block_sum, d_output, length);
+		nvixnu__brent_kung_scan_by_block_kernel<<<grid_dim_step_2, block_dim_step_2, shared_memory_step_2>>>(d_block_sum, d_block_sum, grid_dim, NULL);
+	}else if(!strcmp(config.kernel_version, CH8__HIERARCHICAL_PREFIX_SUM_3_PHASE_KOGGE_STONE)){
+		const int buffer_length = config.shared_memory_size/sizeof(double);
+		const int grid_dim_3_phase = ceil(length/(double)buffer_length); //The grid_dim is specified according to the shared memory instead of block_dim
+		const int grid_dim_3_phase_step_2 = ceil(grid_dim_3_phase/(double)buffer_length);
+		nvixnu__3_phase_kogge_stone_scan_by_block_kernel<<<grid_dim_3_phase, block_dim, config.shared_memory_size>>>(d_input, d_output, length, buffer_length, d_block_sum);
 		CCLE();
 		CCE(cudaDeviceSynchronize());
+		nvixnu__3_phase_kogge_stone_scan_by_block_kernel<<<grid_dim_3_phase_step_2, block_dim, config.shared_memory_size>>>(d_block_sum, d_block_sum, grid_dim, buffer_length, NULL);
 	}else{
 		printf("\nINVALID KERNEL VERSION\n");
+		exit(1);
 	}
+
+	CCLE();
+	CCE(cudaDeviceSynchronize());
+	ch8__increment_section<<<grid_dim, block_dim>>>(d_block_sum, d_output, length);
+	CCLE();
+	CCE(cudaDeviceSynchronize());
 
 	DEVICE_TOC(0);
 
@@ -77,7 +92,7 @@ void ch8__full_prefix_sum_host(double *input, double *output, const int length){
 }
 
 
-void ch8__full_prefix_sum(env_e env, kernel_config_t config, const int section_length){
+void ch8__full_prefix_sum(env_e env, kernel_config_t config){
 	double *input, *output;
 
 	input = (double *)malloc(CH8__ARRAY_LENGTH_FOR_FULL_SCAN*sizeof(double));

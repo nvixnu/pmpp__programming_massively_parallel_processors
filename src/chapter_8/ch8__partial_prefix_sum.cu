@@ -56,12 +56,13 @@ void ch8__partial_prefix_sum_device(double *h_input, double *h_output, const int
 		nvixnu__kogge_stone_scan_by_block_kernel<<<grid_dim, block_dim, shared_memory>>>(d_input, d_output, length, NULL);
 	}else if(!strcmp(config.kernel_version, CH8__PREFIX_SUM_BRENT_KUNG)){
 		nvixnu__brent_kung_scan_by_block_kernel<<<grid_dim, block_dim, shared_memory>>>(d_input, d_output, length, NULL);
-	}else if(!strcmp(config.kernel_version, CH8__PREFIX_SUM_KOGGE_STONE_3_PHASE)){
-		const int buffer_length = config.shared_memory_length/sizeof(double);
+	}else if(!strcmp(config.kernel_version, CH8__PREFIX_SUM_3_PHASE_KOGGE_STONE)){
+		const int buffer_length = config.shared_memory_size/sizeof(double);
 		const int grid_dim_3_phase = ceil(length/(double)buffer_length); //The grid_dim is specified according to the shared memory instead of block_dim
-		nvixnu__kogge_stone_3_phase_scan_by_block_kernel<<<grid_dim_3_phase, block_dim, config.shared_memory_length>>>(d_input, d_output, length, buffer_length, NULL);
+		nvixnu__3_phase_kogge_stone_scan_by_block_kernel<<<grid_dim_3_phase, block_dim, config.shared_memory_size>>>(d_input, d_output, length, buffer_length, NULL);
 	}else{
 		printf("\nINVALID KERNEL VERSION\n");
+		exit(1);
 	}
 	CCLE();
 

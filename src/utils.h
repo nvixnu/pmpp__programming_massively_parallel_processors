@@ -79,7 +79,7 @@ typedef struct{
 typedef struct{
 	dim_t block_dim = {1024, 1, 1};
 	const char *kernel_version;
-	size_t shared_memory_length;
+	size_t shared_memory_size;
 } kernel_config_t;
 
 #endif /* UTILS_H_ */

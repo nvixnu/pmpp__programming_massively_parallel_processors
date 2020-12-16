@@ -42,6 +42,7 @@ void ch4__matrix_mul_device(double *h_A, double *h_B, double *h_C, const int i_l
 		nvixnu__tiled_gemm_kernel<<<grid_dim, block_dim, shared_memory_length>>>(d_A, d_B, d_C, i_length, j_length, k_length, config.block_dim.x);
 	}else{
 		printf("\nINVALID KERNEL VERSION\n");
+		exit(1);
 	}
 	CCLE();
 	DEVICE_TOC(0);
