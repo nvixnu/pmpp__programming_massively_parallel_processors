@@ -140,15 +140,15 @@ static inline void chapter_8_menu(){
 	int option = -1;
 	//Gets the max length of shared memory to use as SECTION_SIZE of the 3-phase algorithm
 	cudaDeviceProp device_props =  nvixnu__get_cuda_device_props(0);
-	const int memory_bound_section_size = device_props.sharedMemPerBlock;
+	const int memory_bound_section_size = device_props.sharedMemPerBlock; //10*sizeof(double);
 	const int memory_bound_section_length = memory_bound_section_size/sizeof(double);
-	const int thread_bound_section_length = device_props.maxThreadsDim[0];
+	const int thread_bound_section_length = device_props.maxThreadsDim[0]; //3;
 
 	while(option != 0){
 		printf("\nCHAPTER 8:\n");
+		printf("CH8__ARRAY_LENGTH: %d\n", CH8__ARRAY_LENGTH);
 		switch(option){
 		case 1:
-			printf("CH8__ARRAY_LENGTH_FOR_PARTIAL_SCAN: %d\n", CH8__ARRAY_LENGTH_FOR_PARTIAL_SCAN);
 
 			printf("\nRunning [ch8__partial_prefix_sum Kogge-Stone] on Device with %d threads per block...:\n", thread_bound_section_length);
 			ch8__partial_prefix_sum(Device, {
@@ -180,7 +180,6 @@ static inline void chapter_8_menu(){
 			option = -1;
 			break;
 		case 2:
-			printf("CH8__ARRAY_LENGTH_FOR_FULL_SCAN: %d\n", CH8__ARRAY_LENGTH_FOR_FULL_SCAN);
 
 			printf("\nRunning [ch8__full_prefix_sum Hierarchical Kogge-Stone] on Device with %d threads per block...:\n", thread_bound_section_length);
 			ch8__full_prefix_sum(Device, {
@@ -194,7 +193,7 @@ static inline void chapter_8_menu(){
 					.kernel_version = CH8__HIERARCHICAL_PREFIX_SUM_BRENT_KUNG
 			});
 
-			printf("\nRunning [ch8__full_prefix_sum 3 phase Kogge-Stone] on Device with %d threads per block and section length equals to %d...:\n", thread_bound_section_length, memory_bound_section_length);
+			printf("\nRunning [ch8__full_prefix_sum Hierarchical 3 phase Kogge-Stone] on Device with %d threads per block and section length equals to %d...:\n", thread_bound_section_length, memory_bound_section_length);
 			ch8__full_prefix_sum(Device, {
 					.block_dim = {thread_bound_section_length,1,1},
 					.kernel_version = CH8__HIERARCHICAL_PREFIX_SUM_3_PHASE_KOGGE_STONE,
