@@ -83,7 +83,7 @@ void ch8__partial_prefix_sum(env_e env, kernel_config_t config, const int sectio
 	input = (double *)malloc(CH8__ARRAY_LENGTH*sizeof(double));
 	output = (double *)calloc(CH8__ARRAY_LENGTH, sizeof(double));
 
-	//nvixnu__populate_array_from_file(CH8__FILEPATH, "%lf,", CH8__ARRAY_LENGTH, sizeof(double), input);
+	nvixnu__populate_array_from_file(CH8__FILEPATH, "%lf,", CH8__ARRAY_LENGTH, sizeof(double), input);
 
 	for(int i = 0; i < CH8__ARRAY_LENGTH; i++){
 		input[i] = i;
@@ -98,7 +98,6 @@ void ch8__partial_prefix_sum(env_e env, kernel_config_t config, const int sectio
 
 	printf("Last %d values:\n", PRINT_LENGTH);
 	nvixnu__array_map(output + CH8__ARRAY_LENGTH - PRINT_LENGTH, sizeof(double), PRINT_LENGTH, nvixnu__print_item_double);
-	//nvixnu__array_map(output, sizeof(double), CH8__ARRAY_LENGTH, nvixnu__print_item_double);
 
 	free(input);
 	free(output);

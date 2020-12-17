@@ -102,7 +102,6 @@ void ch8__full_prefix_sum_device(double *h_input, double *h_output, const int le
 	// Calculates the kernel configuration for the second level/step of the hierarchical method
 	const int block_dim_step_2 = grid_dim >= 1024 ? 1024 : (ceil(grid_dim/32.0)*32);
 	const int grid_dim_step_2 = ceil(grid_dim/(double)block_dim_step_2);
-	const int shared_memory_step_2 = block_dim_step_2*sizeof(double);
 
 	CCE(cudaMalloc(&d_input, length*sizeof(double)));
 	CCE(cudaMalloc(&d_output, length*sizeof(double)));
@@ -122,41 +121,19 @@ void ch8__full_prefix_sum_device(double *h_input, double *h_output, const int le
 
 
 	DEVICE_TIC(0);
-	if(!strcmp(config.kernel_version, CH8__HIERARCHICAL_PREFIX_SUM_KOGGE_STONE)){
-		nvixnu__kogge_stone_scan_by_block_kernel<<<grid_dim, block_dim, shared_memory>>>(d_input, d_output, length, d_block_sum);
+	if(!strcmp(config.kernel_version, CH8__HIERARCHICAL_PREFIX_SUM_3_PHASE_KOGGE_STONE)){
+		const int section_length = config.shared_memory_size/sizeof(double);
+		const int grid_dim_3_phase = ceil(length/(double)section_length); //The grid_dim is specified according to the shared memory instead of block_dim
+		const int grid_dim_3_phase_step_2 = ceil(grid_dim_3_phase/(double)section_length);
+		nvixnu__3_phase_kogge_stone_scan_by_block_kernel<<<grid_dim_3_phase, block_dim, config.shared_memory_size>>>(d_input, d_output, length, section_length, d_block_sum);
 		CCLE();
 		CCE(cudaDeviceSynchronize());
-		nvixnu__kogge_stone_scan_by_block_kernel<<<grid_dim_step_2, block_dim_step_2, shared_memory_step_2>>>(d_block_sum, d_block_sum, grid_dim, NULL);
+		nvixnu__3_phase_kogge_stone_scan_by_block_kernel<<<grid_dim_3_phase_step_2, block_dim, config.shared_memory_size>>>(d_block_sum, d_block_sum, grid_dim_3_phase, section_length, NULL);
 		CCLE();
 		CCE(cudaDeviceSynchronize());
-		ch8__increment_section<<<grid_dim, block_dim>>>(d_block_sum, d_output, length);
+		ch8__3_phase_increment_section<<<grid_dim_3_phase, block_dim>>>(d_block_sum, d_output, length, section_length);
 		CCLE();
-		CCE(cudaDeviceSynchronize());
-	}else if(!strcmp(config.kernel_version, CH8__HIERARCHICAL_PREFIX_SUM_BRENT_KUNG)){
-		nvixnu__brent_kung_scan_by_block_kernel<<<grid_dim, block_dim, shared_memory>>>(d_input, d_output, length, d_block_sum);
-		CCLE();
-		CCE(cudaDeviceSynchronize());
-		nvixnu__brent_kung_scan_by_block_kernel<<<grid_dim_step_2, block_dim_step_2, shared_memory_step_2>>>(d_block_sum, d_block_sum, grid_dim, NULL);
-		CCLE();
-		CCE(cudaDeviceSynchronize());
-		ch8__increment_section<<<grid_dim, block_dim>>>(d_block_sum, d_output, length);
-		CCLE();
-		CCE(cudaDeviceSynchronize());
-	}else if(!strcmp(config.kernel_version, CH8__HIERARCHICAL_PREFIX_SUM_3_PHASE_KOGGE_STONE)){
-		const int buffer_length = config.shared_memory_size/sizeof(double);
-		const int grid_dim_3_phase = ceil(length/(double)buffer_length); //The grid_dim is specified according to the shared memory instead of block_dim
-		const int grid_dim_3_phase_step_2 = ceil(grid_dim_3_phase/(double)buffer_length);
-		const int block_dim_3_phase_step_2 = grid_dim_3_phase >= 1024 ? 1024 : (ceil(grid_dim_3_phase/32.0)*32);
-		nvixnu__3_phase_kogge_stone_scan_by_block_kernel<<<grid_dim_3_phase, block_dim, config.shared_memory_size>>>(d_input, d_output, length, buffer_length, d_block_sum);
-		CCLE();
-		CCE(cudaDeviceSynchronize());
-		nvixnu__3_phase_kogge_stone_scan_by_block_kernel<<<grid_dim_3_phase_step_2, block_dim_3_phase_step_2, config.shared_memory_size>>>(d_block_sum, d_block_sum, grid_dim, buffer_length, NULL);
-		CCLE();
-		CCE(cudaDeviceSynchronize());
-		ch8__3_phase_increment_section<<<grid_dim_3_phase, block_dim>>>(d_block_sum, d_output, length, buffer_length);
-		CCLE();
-		CCE(cudaDeviceSynchronize());
-	}else if(!strcmp(config.kernel_version, CH8__SINGLE_PASS_PREFIX_SUM_KOGGE_STONE)){
+	}else if(!strcmp(config.kernel_version, CH8__SINGLE_PASS_PREFIX_SUM_3_PHASE_KOGGE_STONE)){
 		ch8__single_pass_kogge_stone_scan<<<grid_dim, block_dim, shared_memory>>>(d_input, d_output, length, d_block_sum_volatile, d_flags, d_block_counter);
 	}else if(!strcmp(config.kernel_version, CH8__SINGLE_PASS_PREFIX_SUM_3_PHASE_KOGGE_STONE)){
 
@@ -171,6 +148,9 @@ void ch8__full_prefix_sum_device(double *h_input, double *h_output, const int le
 	CCE(cudaMemcpy(h_output, d_output, length*sizeof(double), cudaMemcpyDeviceToHost));
 
 	CCE(cudaFree(d_block_sum));
+	CCE(cudaFree((void *)d_block_sum_volatile));
+	CCE(cudaFree(d_flags));
+	CCE(cudaFree(d_block_counter));
 	CCE(cudaFree(d_input));
 	CCE(cudaFree(d_output));
 
@@ -191,10 +171,6 @@ void ch8__full_prefix_sum(env_e env, kernel_config_t config){
 
 	nvixnu__populate_array_from_file(CH8__FILEPATH, "%lf,", CH8__ARRAY_LENGTH, sizeof(double), input);
 
-//	for(int i = 0; i < CH8__ARRAY_LENGTH; i++){
-//		input[i] = i;
-//	}
-
 	if(env == Host){
 		ch8__full_prefix_sum_host(input, output, CH8__ARRAY_LENGTH);
 	}else{
@@ -203,7 +179,6 @@ void ch8__full_prefix_sum(env_e env, kernel_config_t config){
 
 	printf("Last %d values:\n", PRINT_LENGTH);
 	nvixnu__array_map(output + CH8__ARRAY_LENGTH - PRINT_LENGTH, sizeof(double), PRINT_LENGTH, nvixnu__print_item_double);
-	//nvixnu__array_map(output, sizeof(double), CH8__ARRAY_LENGTH, nvixnu__print_item_double);
 
 	free(input);
 	free(output);
