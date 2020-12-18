@@ -10,7 +10,7 @@
 
 #include <stdio.h>
 #include <string.h>
-#include "ch9__config.h"
+#include "ch10__config.h"
 #include "nvixnu__array_utils.h"
 #include "nvixnu__populate_arrays_utils.h"
 #include "nvixnu__error_utils.h"

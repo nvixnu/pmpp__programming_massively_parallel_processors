@@ -10,12 +10,12 @@
 
 #include <stdio.h>
 #include "nvixnu__cuda_devices_props.h"
-#include "chapter_2/ch2__config.h"
-#include "chapter_3/ch3__config.h"
-#include "chapter_4/ch4__config.h"
-#include "chapter_5/ch5__config.h"
-#include "chapter_7/ch7__config.h"
-#include "chapter_8/ch8__config.h"
+#include "chapter_02/ch2__config.h"
+#include "chapter_03/ch3__config.h"
+#include "chapter_04/ch4__config.h"
+#include "chapter_05/ch5__config.h"
+#include "chapter_07/ch7__config.h"
+#include "chapter_08/ch8__config.h"
 #include "utils.h"
 
 
