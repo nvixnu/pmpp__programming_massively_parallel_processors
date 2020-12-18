@@ -16,6 +16,7 @@
 #include "chapter_05/ch5__config.h"
 #include "chapter_07/ch7__config.h"
 #include "chapter_08/ch8__config.h"
+#include "chapter_09/ch9__config.h"
 #include "utils.h"
 
 
@@ -203,6 +204,24 @@ static inline void chapter_8_menu(){
 	}
 }
 
+static inline void chapter_9_menu(){
+	printf("Chapter 9\n");
+	printf("Running [ch9__parallel_histogram with block partitioning] on Device:\n");
+	ch9__parallel_histogram(Device, {.block_dim = {1024, 1, 1}, .kernel_version = CH9__HISTOGRAM_WITH_BLOCK_PARTITIONING});
+
+	printf("Running [ch9__parallel_histogram with interleaved partitioning] on Device:\n");
+	ch9__parallel_histogram(Device, {.block_dim = {1024, 1, 1}, .kernel_version = CH9__HISTOGRAM_WITH_INTERLEAVED_PARTITIONING});
+
+	printf("Running [ch9__parallel_histogram with privatization] on Device:\n");
+	ch9__parallel_histogram(Device, {.block_dim = {1024, 1, 1}, .kernel_version = CH9__HISTOGRAM_PRIVATIZED});
+
+	printf("Running [ch9__parallel_histogram with aggregation] on Device:\n");
+	ch9__parallel_histogram(Device, {.block_dim = {1024, 1, 1}, .kernel_version = CH9__HISTOGRAM_AGGREGATED});
+
+	printf("\nRunning [ch9__parallel_histogram] on Host...\n");
+	ch9__parallel_histogram(Host, {});
+}
+
 
 
 int main(void){
@@ -235,6 +254,10 @@ int main(void){
 			chapter_8_menu();
 			main = -1;
 			break;
+		case 9:
+			chapter_9_menu();
+			main = -1;
+			break;
 		default:
 			printf("\nCHAPTERS:\n");
 			printf("\t[Chapter 2] - Data parallel computing (vector addition)\n");
@@ -242,7 +265,8 @@ int main(void){
 			printf("\t[Chapter 4] - Memory and data locality (Matrix Multiplication)\n");
 			printf("\t[Chapter 5] - Performance considerations (Array reduction)\n");
 			printf("\t[Chapter 7] - Parallel patterns: convolution (1D and 2D convolution)\n");
-			printf("\t[Chapter 8] - Parallel patterns: prefix sum (Sequantial, Kogge-Stone and Brent-Kung)\n");
+			printf("\t[Chapter 8] - Parallel patterns: prefix sum (Sequential, Kogge-Stone and Brent-Kung versions)\n");
+			printf("\t[Chapter 9] - Parallel patterns: parallel histogram computation\n");
 			printf("\nPress the chapter number or zero to exit.\n");
 			scanf("%d", &main);
 			setbuf(stdin, NULL);
