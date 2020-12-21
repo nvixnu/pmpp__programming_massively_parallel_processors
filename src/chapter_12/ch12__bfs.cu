@@ -53,9 +53,9 @@ void ch12__bfs(env_e env, kernel_config_t config){
 	nvixnu__populate_array_from_file(CH9__FILEPATH, "%lf,", CH9__ARRAY_LENGTH, sizeof(double), input);
 
 	if(env == Host){
-		ch11__merge_sort_host(input, output, CH9__ARRAY_LENGTH);
+		ch12__bfs_host(input, output, CH9__ARRAY_LENGTH);
 	}else{
-		ch11__merge_sort_device(input, output, CH9__ARRAY_LENGTH, config);
+		ch12__bfs_device(input, output, CH9__ARRAY_LENGTH, config);
 	}
 
 	printf("Last %d values:\n", PRINT_LENGTH);
