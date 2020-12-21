@@ -85,10 +85,6 @@ void ch8__partial_prefix_sum(env_e env, kernel_config_t config, const int sectio
 
 	nvixnu__populate_array_from_file(CH8__FILEPATH, "%lf,", CH8__ARRAY_LENGTH, sizeof(double), input);
 
-	for(int i = 0; i < CH8__ARRAY_LENGTH; i++){
-		input[i] = i;
-	}
-
 
 	if(env == Host){
 		ch8__partial_prefix_sum_host(input, output, CH8__ARRAY_LENGTH, 1, section_length);

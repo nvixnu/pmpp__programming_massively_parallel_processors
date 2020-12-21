@@ -17,6 +17,9 @@
 #include "chapter_07/ch7__config.h"
 #include "chapter_08/ch8__config.h"
 #include "chapter_09/ch9__config.h"
+#include "chapter_10/ch10__config.h"
+#include "chapter_11/ch11__config.h"
+#include "chapter_12/ch12__config.h"
 #include "utils.h"
 
 
