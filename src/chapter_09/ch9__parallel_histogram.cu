@@ -25,8 +25,8 @@ void ch9__histogram_aggregated_kernel(char* input, const int input_length, int* 
 		histo_s[binIdx] = 0u;
 	}
 	__syncthreads();
-	unsigned int prev_index = -1;
-	unsigned int accumulator = 0;
+	int prev_index = -1;
+	int accumulator = 0;
 
 	for(unsigned int i = tid; i < input_length; i += blockDim.x*gridDim.x) {
 		int alphabet_position = input[i] - 'a';
@@ -117,12 +117,16 @@ void ch9__parallel_histogram_device(char *h_input, const int input_length, int *
 	DEVICE_TIC(0);
 	if(!strcmp(config.kernel_version, CH9__HISTOGRAM_WITH_BLOCK_PARTITIONING)){
 		ch9__histogram_with_block_partitioning_kernel<<<grid_dim, block_dim>>>(d_input, input_length, d_output);
+		CCLE();
 	}else if(!strcmp(config.kernel_version, CH9__HISTOGRAM_WITH_INTERLEAVED_PARTITIONING)){
 		ch9__histogram_with_interleaved_partitioning_kernel<<<grid_dim, block_dim>>>(d_input, input_length, d_output);
+		CCLE();
 	}else if(!strcmp(config.kernel_version, CH9__HISTOGRAM_PRIVATIZED)){
 		ch9__histogram_privatized_kernel<<<grid_dim, block_dim>>>(d_input, input_length, d_output, output_length);
+		CCLE();
 	}else if(!strcmp(config.kernel_version, CH9__HISTOGRAM_AGGREGATED)){
 		ch9__histogram_aggregated_kernel<<<grid_dim, block_dim>>>(d_input, input_length, d_output, output_length);
+		CCLE();
 	}else{
 		printf("\nINVALID KERNEL VERSION\n");
 		exit(1);
