@@ -20,6 +20,8 @@
 #define CH12__EDGES_FILEPATH CREDIT_CARD_DATASET_PATH
 #define CH12__EDGES_LENGTH CREDIT_CARD_DATASET_LENGTH
 
+#define CH12__MAX_FRONTIER_LENGTH 50
+
 /**
  * Performs the Breadth-first search on host and device
  * @param env Environment to run on (Host or Device)
