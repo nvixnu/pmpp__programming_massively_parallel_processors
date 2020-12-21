@@ -14,8 +14,11 @@
 #include "../utils.h"
 #include "../datasets_info.h" //Credit card dataset info
 
-#define CH9__FILEPATH CREDIT_CARD_DATASET_PATH
-#define CH9__ARRAY_LENGTH CREDIT_CARD_DATASET_LENGTH
+#define CH12__DEST_FILEPATH CREDIT_CARD_DATASET_PATH
+#define CH12__DEST_LENGTH CREDIT_CARD_DATASET_LENGTH
+
+#define CH12__EDGES_FILEPATH CREDIT_CARD_DATASET_PATH
+#define CH12__EDGES_LENGTH CREDIT_CARD_DATASET_LENGTH
 
 /**
  * Performs the Breadth-first search on host and device

@@ -361,8 +361,8 @@ void ch11__merge_sort(env_e env, kernel_config_t config){
 	B = (int *)malloc(CH11__B_LENGTH*sizeof(int));
 	C = (int *)malloc(CH11__C_LENGTH*sizeof(int));
 
-	nvixnu__populate_array_from_file(CH11__A_FILEPATH, "%lf,", CH11__A_LENGTH, sizeof(int), A);
-	nvixnu__populate_array_from_file(CH11__B_FILEPATH, "%lf,", CH11__B_LENGTH, sizeof(int), B);
+	nvixnu__populate_array_from_file(CH11__A_FILEPATH, "%d,", CH11__A_LENGTH, sizeof(int), A);
+	nvixnu__populate_array_from_file(CH11__B_FILEPATH, "%d,", CH11__B_LENGTH, sizeof(int), B);
 
 	if(env == Host){
 		ch11__merge_sort_host(A, CH11__A_LENGTH, B, CH11__B_LENGTH, C);
