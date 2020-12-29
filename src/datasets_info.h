@@ -20,6 +20,7 @@
 #define LOREM_IPSUM_DATASET_BYTES 10000
 #define LOREM_IPSUM_DATASET_PATH "../datasets/lorem_ipsum/lipsum_17p_1478w_10000b.txt"
 
+
 #define IMG_FOLDER "../datasets/images/"
 #define IMG_GREEN_FIELD IMG_FOLDER "green_field.jpg"
 #define IMG_BEAR IMG_FOLDER "himalayan_brown_bear.jpg"

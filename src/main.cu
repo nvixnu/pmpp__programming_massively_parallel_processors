@@ -24,7 +24,7 @@
 
 
 static inline void chapter_2_menu(){
-	printf("Chapter 2\n");
+	printf("Chapter 02\n");
 	printf("Running [vec_add] on Device with 256 threads per block...:\n");
 	ch2__vec_add(Device, {.block_dim = {256,1,1}});
 
@@ -39,7 +39,7 @@ static inline void chapter_2_menu(){
 static inline void chapter_3_menu(){
 	int option = -1;
 	while(option != 0){
-		printf("\nCHAPTER 3:\n");
+		printf("\nCHAPTER 03:\n");
 		switch(option){
 		case 1:
 			printf("Running [color_to_grayscale] on Device with 256 threads per block...:\n");
@@ -74,7 +74,7 @@ static inline void chapter_3_menu(){
 }
 
 static inline void chapter_4_menu(){
-	printf("Chapter 4\n");
+	printf("Chapter 04\n");
 	printf("Running [matrix_mul] on Device with 256 threads per block...:\n");
 	ch4__matrix_mul(Device, {.block_dim = {16,16,1}, .kernel_version = CH4__MATRIX_MUL_KERNEL_NAIVE});
 
@@ -92,7 +92,7 @@ static inline void chapter_4_menu(){
 }
 
 static inline void chapter_5_menu(){
-	printf("Chapter 5\n");
+	printf("Chapter 05\n");
 	printf("Running [ch5__sum_reduction] on Device with 256 threads per block...:\n");
 	ch5__sum_reduction(Device, {.block_dim = {256,1,1}});
 
@@ -106,7 +106,7 @@ static inline void chapter_5_menu(){
 static inline void chapter_7_menu(){
 	int option = -1;
 	while(option != 0){
-		printf("\nCHAPTER 7:\n");
+		printf("\nCHAPTER 07:\n");
 		switch(option){
 		case 1:
 			printf("Running [ch7__1d_convolution] on Device with 256 threads per block...:\n");
@@ -149,7 +149,7 @@ static inline void chapter_8_menu(){
 	const int thread_bound_section_length = device_props.maxThreadsDim[0];
 
 	while(option != 0){
-		printf("\nCHAPTER 8:\n");
+		printf("\nCHAPTER 08:\n");
 		printf("CH8__ARRAY_LENGTH: %d\n", CH8__ARRAY_LENGTH);
 		switch(option){
 		case 1:
@@ -215,7 +215,7 @@ static inline void chapter_8_menu(){
 }
 
 static inline void chapter_9_menu(){
-	printf("Chapter 9\n");
+	printf("Chapter 09\n");
 	printf("Running [ch9__parallel_histogram with block partitioning] on Device:\n");
 	ch9__parallel_histogram(Device, {.block_dim = {1024, 1, 1}, .kernel_version = CH9__HISTOGRAM_WITH_BLOCK_PARTITIONING});
 
@@ -230,6 +230,19 @@ static inline void chapter_9_menu(){
 
 	printf("\nRunning [ch9__parallel_histogram] on Host...\n");
 	ch9__parallel_histogram(Host, {});
+}
+
+static inline void chapter_10_menu(){
+	printf("Chapter 10\n");
+	printf("Running [ch10__spmv CSR] on Device:\n");
+	ch10__spmv(Device, {.block_dim = {1024, 1, 1}, .kernel_version = CH10__SPMV_CSR});
+
+	printf("Running [ch10__spmv ELL] on Device:\n");
+	ch10__spmv(Device, {.block_dim = {1024, 1, 1}, .kernel_version = CH10__SPMV_ELL});
+
+
+	printf("\nRunning [ch10__spmv CSR] on Host...\n");
+	ch10__spmv(Host, {});
 }
 
 
@@ -268,6 +281,10 @@ int main(void){
 			chapter_9_menu();
 			main = -1;
 			break;
+		case 10:
+			chapter_10_menu();
+			main = -1;
+			break;
 		default:
 			printf("\nCHAPTERS:\n");
 			printf("\t[Chapter 2] - Data parallel computing (vector addition)\n");
@@ -277,6 +294,7 @@ int main(void){
 			printf("\t[Chapter 7] - Parallel patterns: convolution (1D and 2D convolution)\n");
 			printf("\t[Chapter 8] - Parallel patterns: prefix sum (Sequential, Kogge-Stone and Brent-Kung versions)\n");
 			printf("\t[Chapter 9] - Parallel patterns: parallel histogram computation\n");
+			printf("\t[Chapter 10] - Parallel patterns: sparse matrix computation computation\n");
 			printf("\nPress the chapter number or zero to exit.\n");
 			scanf("%d", &main);
 			setbuf(stdin, NULL);

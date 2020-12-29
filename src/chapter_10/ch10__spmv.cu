@@ -142,8 +142,23 @@ void ch10__csr_spmv_host(double *m_data, int *m_col_index, int *m_row_ptr, const
 	HOST_TOC(0)
 }
 
-void csr2ell(csr_t csr, ell_t ell){
+void csr2ell(sparse_t dims, csr_t csr, ell_t ell){
+	for (int row = 0; row < dims.rows; row++) {
+		int row_start = csr.row_ptr[row];
+		int row_end = csr.row_ptr[row+1];
+		for(int col = 0; col < dims.largest_row_width; col++){
+			int elem = row_start + col;
+			int idx = col*dims.rows + row;
+			if(elem < row_end){
+				ell.data[idx] = csr.data[elem];
+				ell.idx[idx] = csr.col_idx[elem];
+			}else{
+				ell.data[idx] = 0;
+				ell.idx[idx] = 0;
+			}
+		}
 
+	}
 }
 
 void ch10__spmv(env_e env, kernel_config_t config){
@@ -156,11 +171,11 @@ void ch10__spmv(env_e env, kernel_config_t config){
 	csr.row_ptr = (int *)malloc((CH10__INPUT_ROWS + 1)*sizeof(int));
 
 	v = (double *)malloc(CH10__INPUT_COLS*sizeof(double));
-	y = (double *)malloc(CH10__INPUT_ROWS*sizeof(double));
+	y = (double *)calloc(CH10__INPUT_ROWS, sizeof(double));
 
 	nvixnu__populate_array_from_file(CH10__CSR_DATA_FILEPATH, "%lf", CH10__INPUT_NON_ZERO_LENGTH, sizeof(double), csr.data);
-	nvixnu__populate_array_from_file(CH10__CSR_DATA_FILEPATH, "%d", CH10__INPUT_NON_ZERO_LENGTH, sizeof(int), csr.col_idx);
-	nvixnu__populate_array_from_file(CH10__CSR_DATA_FILEPATH, "%d", CH10__INPUT_ROWS + 1, sizeof(int), csr.row_ptr);
+	nvixnu__populate_array_from_file(CH10__CSR_COL_INDEX_FILEPATH, "%d", CH10__INPUT_NON_ZERO_LENGTH, sizeof(int), csr.col_idx);
+	nvixnu__populate_array_from_file(CH10__CSR_ROW_PTR_FILEPATH, "%d", CH10__INPUT_ROWS + 1, sizeof(int), csr.row_ptr);
 	nvixnu__populate_array_from_file(CH10__VECTOR_FILEPATH, "%lf", CH10__INPUT_COLS, sizeof(double), v);
 
 	if(env == Host){
@@ -171,10 +186,12 @@ void ch10__spmv(env_e env, kernel_config_t config){
 		}else{
 			ell_t ell;
 
-			ell.data = (double *)malloc(CH10__INPUT_LARGEST_NONZERO_ROW_WIDTH*sizeof(double));
-			ell.idx = (int *)malloc(CH10__INPUT_LARGEST_NONZERO_ROW_WIDTH*sizeof(int));
+			const int ell_length = CH10__INPUT_LARGEST_NONZERO_ROW_WIDTH*CH10__INPUT_ROWS;
 
-			csr2ell(csr, ell);
+			ell.data = (double *)malloc(ell_length*sizeof(double));
+			ell.idx = (int *)malloc(ell_length*sizeof(int));
+
+			csr2ell(dims, csr, ell);
 
 			ch10__ell_spmv_device(ell, v, y, dims, config);
 
@@ -185,7 +202,7 @@ void ch10__spmv(env_e env, kernel_config_t config){
 	}
 
 	printf("Last %d values:\n", PRINT_LENGTH);
-	nvixnu__array_map(y + CH10__INPUT_ROWS - PRINT_LENGTH, sizeof(double), PRINT_LENGTH, nvixnu__print_item_double);
+	nvixnu__array_map(y, sizeof(double), 4, nvixnu__print_item_double);
 
 	free(csr.data);
 	free(csr.col_idx);
