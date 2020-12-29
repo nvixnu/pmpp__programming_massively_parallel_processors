@@ -107,6 +107,7 @@ void ch9__parallel_histogram_device(char *h_input, const int input_length, int *
 
 	const int block_dim = config.block_dim.x;
 	const int grid_dim = ceil(input_length/(double)block_dim);
+	const int shared_memory = block_dim * sizeof(char);
 
 	CCE(cudaMalloc(&d_input, input_length*sizeof(char)));
 	CCE(cudaMalloc(&d_output, output_length*sizeof(int)));
@@ -122,10 +123,10 @@ void ch9__parallel_histogram_device(char *h_input, const int input_length, int *
 		ch9__histogram_with_interleaved_partitioning_kernel<<<grid_dim, block_dim>>>(d_input, input_length, d_output);
 		CCLE();
 	}else if(!strcmp(config.kernel_version, CH9__HISTOGRAM_PRIVATIZED)){
-		ch9__histogram_privatized_kernel<<<grid_dim, block_dim>>>(d_input, input_length, d_output, output_length);
+		ch9__histogram_privatized_kernel<<<grid_dim, block_dim, shared_memory>>>(d_input, input_length, d_output, output_length);
 		CCLE();
 	}else if(!strcmp(config.kernel_version, CH9__HISTOGRAM_AGGREGATED)){
-		ch9__histogram_aggregated_kernel<<<grid_dim, block_dim>>>(d_input, input_length, d_output, output_length);
+		ch9__histogram_aggregated_kernel<<<grid_dim, block_dim, shared_memory>>>(d_input, input_length, d_output, output_length);
 		CCLE();
 	}else{
 		printf("\nINVALID KERNEL VERSION\n");
