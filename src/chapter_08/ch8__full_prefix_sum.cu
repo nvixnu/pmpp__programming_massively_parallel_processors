@@ -35,6 +35,8 @@ void ch8__single_pass_kogge_stone_scan(double *input, double *output, const int 
 
 	if(tid < length){
 		section_sums[threadIdx.x] = input[tid];
+	}else{
+		section_sums[threadIdx.x] = 0.0;
 	}
 
 	unsigned int stride;
@@ -54,6 +56,7 @@ void ch8__single_pass_kogge_stone_scan(double *input, double *output, const int 
 		previous_sum = scan_value[bid];
 		//propagate partial sum
 		scan_value[bid + 1]  = previous_sum + section_sums[blockDim.x -1];
+
 		//memory fence
 		__threadfence();
 		//Set flag
@@ -61,7 +64,7 @@ void ch8__single_pass_kogge_stone_scan(double *input, double *output, const int 
 	}
 	__syncthreads();
 
-	output[tid] = section_sums[threadIdx.x];
+	output[tid] = previous_sum + section_sums[threadIdx.x];
 }
 
 __global__
@@ -97,7 +100,6 @@ void ch8__full_prefix_sum_device(double *h_input, double *h_output, const int le
 
 	const int block_dim = config.block_dim.x;
 	const int grid_dim = ceil(length/(double)block_dim);
-	const int shared_memory = block_dim*sizeof(double);
 
 	// Calculates the kernel configuration for the second level/step of the hierarchical method
 	const int block_dim_step_2 = grid_dim >= 1024 ? 1024 : (ceil(grid_dim/32.0)*32);
@@ -133,8 +135,8 @@ void ch8__full_prefix_sum_device(double *h_input, double *h_output, const int le
 		CCE(cudaDeviceSynchronize());
 		ch8__3_phase_increment_section<<<grid_dim_3_phase, block_dim>>>(d_block_sum, d_output, length, section_length);
 		CCLE();
-	}else if(!strcmp(config.kernel_version, CH8__SINGLE_PASS_PREFIX_SUM_3_PHASE_KOGGE_STONE)){
-		ch8__single_pass_kogge_stone_scan<<<grid_dim, block_dim, shared_memory>>>(d_input, d_output, length, d_block_sum_volatile, d_flags, d_block_counter);
+	}else if(!strcmp(config.kernel_version, CH8__SINGLE_PASS_PREFIX_SUM_KOGGE_STONE)){
+		ch8__single_pass_kogge_stone_scan<<<grid_dim, block_dim, config.shared_memory_size>>>(d_input, d_output, length, d_block_sum_volatile, d_flags, d_block_counter);
 	}else if(!strcmp(config.kernel_version, CH8__SINGLE_PASS_PREFIX_SUM_3_PHASE_KOGGE_STONE)){
 
 	}else{
@@ -171,6 +173,10 @@ void ch8__full_prefix_sum(env_e env, kernel_config_t config){
 
 	nvixnu__populate_array_from_file(CH8__FILEPATH, "%lf,", CH8__ARRAY_LENGTH, sizeof(double), input);
 
+//	for(int i = 0; i < CH8__ARRAY_LENGTH; i++){
+//		input[i] = i;
+//	}
+
 	if(env == Host){
 		ch8__full_prefix_sum_host(input, output, CH8__ARRAY_LENGTH);
 	}else{
@@ -179,6 +185,7 @@ void ch8__full_prefix_sum(env_e env, kernel_config_t config){
 
 	printf("Last %d values:\n", PRINT_LENGTH);
 	nvixnu__array_map(output + CH8__ARRAY_LENGTH - PRINT_LENGTH, sizeof(double), PRINT_LENGTH, nvixnu__print_item_double);
+	//nvixnu__array_map(output, sizeof(double), CH8__ARRAY_LENGTH, nvixnu__print_item_double);
 
 	free(input);
 	free(output);

@@ -192,6 +192,13 @@ static inline void chapter_8_menu(){
 					.shared_memory_size = memory_bound_section_size
 			});
 
+			printf("\nRunning [ch8__full_prefix_sum single-pass Kogge-Stone] on Device with %d threads per block:\n", thread_bound_section_length);
+			ch8__full_prefix_sum(Device, {
+					.block_dim = {thread_bound_section_length,1,1},
+					.kernel_version = CH8__SINGLE_PASS_PREFIX_SUM_KOGGE_STONE,
+					.shared_memory_size = thread_bound_section_length*sizeof(double)
+			});
+
 			printf("\nRunning [ch8__full_prefix_sum] on Host...\n");
 			ch8__full_prefix_sum(Host, {});
 
