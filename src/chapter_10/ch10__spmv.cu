@@ -34,12 +34,12 @@ typedef struct {
 } ell_t;
 
 __global__
-void ch10__ell_spmv_kernel(double *m_data, int *m_col_index, const int length, const int num_rows, double *v, double *y) {
+void ch10__ell_spmv_kernel(double *m_data, int *m_col_index, const int num_cols, const int num_rows, double *v, double *y) {
 	int row = blockIdx.x * blockDim.x + threadIdx.x;
 	if (row < num_rows) {
 		float dot = 0;
-		for (int i = 0; i < length; i++) {
-			dot += m_data[row+i*num_rows] * v[m_col_index[row+i*num_rows]];
+		for (int col = 0; col < num_cols; col++) {
+			dot += m_data[col*num_rows + row] * v[m_col_index[col*num_rows + row]];
 		}
 		y[row] += dot;
 	}
@@ -67,15 +67,15 @@ void ch10__csr_spmv_device(csr_t h_csr, double *h_v, double *h_y, sparse_t dims,
 	const int grid_dim = ceil(dims.rows/(double)block_dim);
 
 	CCE(cudaMalloc(&d_csr.data, dims.non_zeros*sizeof(double)));
-	CCE(cudaMalloc(&d_y, dims.rows*sizeof(double)));
-	CCE(cudaMalloc(&d_v, dims.cols*sizeof(double)));
 	CCE(cudaMalloc(&d_csr.col_idx, dims.non_zeros*sizeof(int)));
 	CCE(cudaMalloc(&d_csr.row_ptr, (dims.rows+1)*sizeof(int)));
+	CCE(cudaMalloc(&d_y, dims.rows*sizeof(double)));
+	CCE(cudaMalloc(&d_v, dims.cols*sizeof(double)));
 
 	CCE(cudaMemcpy(d_csr.data, h_csr.data, dims.non_zeros*sizeof(double), cudaMemcpyHostToDevice));
-	CCE(cudaMemcpy(d_v, h_v, dims.cols*sizeof(double), cudaMemcpyHostToDevice));
 	CCE(cudaMemcpy(d_csr.col_idx, h_csr.col_idx, dims.non_zeros*sizeof(int), cudaMemcpyHostToDevice));
 	CCE(cudaMemcpy(d_csr.row_ptr, h_csr.row_ptr, (dims.rows+1)*sizeof(int), cudaMemcpyHostToDevice));
+	CCE(cudaMemcpy(d_v, h_v, dims.cols*sizeof(double), cudaMemcpyHostToDevice));
 
 	DEVICE_TIC(0);
 	ch10__csr_spmv_kernel<<<grid_dim, block_dim>>>(d_csr.data, d_csr.col_idx, d_csr.row_ptr, dims.rows, d_v, d_y);
@@ -96,17 +96,19 @@ void ch10__ell_spmv_device(ell_t h_ell, double *h_v, double *h_y, sparse_t dims,
 	double *d_y, *d_v;
 	ell_t d_ell;
 
+	const int ell_length = dims.largest_row_width*dims.rows;
+
 	const int block_dim = config.block_dim.x;
 	const int grid_dim = ceil(dims.rows/(double)block_dim);
 
-	CCE(cudaMalloc(&d_ell.data, dims.largest_row_width*sizeof(double)));
+	CCE(cudaMalloc(&d_ell.data, ell_length*sizeof(double)));
+	CCE(cudaMalloc(&d_ell.idx, ell_length*sizeof(int)));
 	CCE(cudaMalloc(&d_y, dims.rows*sizeof(double)));
 	CCE(cudaMalloc(&d_v, dims.cols*sizeof(double)));
-	CCE(cudaMalloc(&d_ell.idx, dims.largest_row_width*sizeof(int)));
 
-	CCE(cudaMemcpy(d_ell.data, h_ell.data, dims.largest_row_width*sizeof(double), cudaMemcpyHostToDevice));
+	CCE(cudaMemcpy(d_ell.data, h_ell.data, ell_length*sizeof(double), cudaMemcpyHostToDevice));
+	CCE(cudaMemcpy(d_ell.idx, h_ell.idx, ell_length*sizeof(int), cudaMemcpyHostToDevice));
 	CCE(cudaMemcpy(d_v, h_v, dims.cols*sizeof(double), cudaMemcpyHostToDevice));
-	CCE(cudaMemcpy(d_ell.idx, h_ell.idx, dims.largest_row_width*sizeof(int), cudaMemcpyHostToDevice));
 
 
 	DEVICE_TIC(0);
