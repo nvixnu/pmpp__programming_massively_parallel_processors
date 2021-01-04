@@ -261,6 +261,15 @@ static inline void chapter_11_menu(){
 	ch11__merge_sort(Host, {});
 }
 
+static inline void chapter_12_menu(){
+	printf("Chapter 12\n");
+	printf("Running [ch12__bfs] on Device:\n");
+	ch12__bfs(Device, {.block_dim = {1024, 1, 1}, .kernel_version = CH12__BLOCK_LEVEL_QUEUE});
+
+	printf("\nRunning [ch12__bfs] on Host...\n");
+	ch12__bfs(Host, {});
+}
+
 
 
 int main(void){
@@ -305,6 +314,10 @@ int main(void){
 			chapter_11_menu();
 			main = -1;
 			break;
+		case 12:
+			chapter_12_menu();
+			main = -1;
+			break;
 		default:
 			printf("\nCHAPTERS:\n");
 			printf("\t[Chapter 02] - Data parallel computing (vector addition)\n");
@@ -316,6 +329,7 @@ int main(void){
 			printf("\t[Chapter 09] - Parallel patterns: parallel histogram computation\n");
 			printf("\t[Chapter 10] - Parallel patterns: sparse matrix computation\n");
 			printf("\t[Chapter 11] - Parallel patterns: merge sort\n");
+			printf("\t[Chapter 12] - Parallel patterns: graph search\n");
 			printf("\nPress the chapter number or zero to exit.\n");
 			scanf("%d", &main);
 			setbuf(stdin, NULL);

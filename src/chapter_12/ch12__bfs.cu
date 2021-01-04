@@ -73,11 +73,21 @@ void ch12__bfs_kernel(int *p_frontier, int *p_frontier_tail, int *c_frontier,
 }
 
 
+__global__
+void ch12__frontier_exchange(int *p_frontier_tail, int *c_frontier_tail){
+	*p_frontier_tail = *c_frontier_tail;
+	*c_frontier_tail = 0;
+}
+
+
 void ch12__bfs_device(bfs_t h_bfs, kernel_config_t config){
 	// copy edges, dest, and label to device global memory
 	// allocate c_frontier_tail_d, p_frontier_tail_d in device global memory
 
 	int *d_edges, *d_labels, *d_dest, *d_visited, *d_c_frontier, *d_p_frontier, *d_c_frontier_tail, *d_p_frontier_tail;
+	int *p_frontier_tail;
+
+	p_frontier_tail = (int *)malloc(sizeof(int));
 
 	CCE(cudaMalloc(&d_edges, h_bfs.edges_length*sizeof(int)));
 	CCE(cudaMalloc(&d_labels, h_bfs.dest_length*sizeof(int)));
@@ -103,19 +113,24 @@ void ch12__bfs_device(bfs_t h_bfs, kernel_config_t config){
 
 
 	DEVICE_TIC(0);
-	if(!strcmp(config.kernel_version, "XXX")){
-		h_bfs.p_frontier_tail = 1;
-		while (h_bfs.p_frontier_tail > 0) {
-			int grid_dim = ceil(h_bfs.p_frontier_tail/(double)block_dim);
+	if(!strcmp(config.kernel_version, CH12__BLOCK_LEVEL_QUEUE)){
+		*p_frontier_tail = 1;
+		while (*p_frontier_tail > 0) {
+			int grid_dim = ceil(*p_frontier_tail/(double)block_dim);
 
 			ch12__bfs_kernel<<<grid_dim, block_dim, 1000>>>(d_p_frontier, d_p_frontier_tail,
 					d_c_frontier, d_c_frontier_tail, d_edges, d_dest, d_labels, d_visited, 100);
+			CCLE();
 			// use cudaMemcpy to read the *c_frontier_tail value back to host and assign
-			// it te p_frontier_tail for the while-loop condition test
+			// it to p_frontier_tail for the while-loop condition test
+			CCE(cudaMemcpy(p_frontier_tail, d_c_frontier_tail, sizeof(int), cudaMemcpyDeviceToHost));
+
 			int* temp = d_c_frontier;
 			d_c_frontier = d_p_frontier;
 			d_p_frontier = temp; //swap the roles
-			// launch a simple kernel to set *p_frontier_tail_d = *c_frontier_tail_d; *c_frontier_ctail_d = 0;
+			// launch a simple kernel to set ;
+			ch12__frontier_exchange<<<1, 1>>>(d_p_frontier_tail, d_c_frontier_tail);
+			CCLE();
 		}
 	}else{
 		printf("\nINVALID KERNEL VERSION\n");
@@ -133,6 +148,8 @@ void ch12__bfs_device(bfs_t h_bfs, kernel_config_t config){
 	CCE(cudaFree(d_p_frontier));
 	CCE(cudaFree(d_c_frontier_tail));
 	CCE(cudaFree(d_p_frontier_tail));
+
+	free(p_frontier_tail);
 }
 
 void ch12__bfs_host(bfs_t bfs){
@@ -146,15 +163,15 @@ void ch12__bfs_host(bfs_t bfs){
 			for (int i = bfs.edges[c_vertex]; i < bfs.edges[c_vertex+1]; i++) { //for all its edges
 				if (bfs.labels[bfs.dest[i]] == -1) { // The dest vertex has not been visited
 					insert_frontier(bfs.dest[i], bfs.c_frontier, &(bfs.c_frontier_tail)); // overflow check omitted for brevity
-					bfs.labels [bfs.dest[i]] = bfs.labels[c_vertex] +1;
+					bfs.labels[bfs.dest[i]] = bfs.labels[c_vertex] +1;
 				}
 			}
-			int* temp = bfs.c_frontier;
-			bfs.c_frontier = bfs.p_frontier;
-			bfs.p_frontier = temp; //swap previous and current
-			bfs.p_frontier_tail = bfs.c_frontier_tail;
-			bfs.c_frontier_tail = 0;
 		}
+		int* temp = bfs.c_frontier;
+		bfs.c_frontier = bfs.p_frontier;
+		bfs.p_frontier = temp; //swap previous and current
+		bfs.p_frontier_tail = bfs.c_frontier_tail;
+		bfs.c_frontier_tail = 0;
 	}
 	HOST_TOC(0);
 
@@ -190,7 +207,8 @@ void ch12__bfs(env_e env, kernel_config_t config){
 	}
 
 	printf("Last %d values:\n", PRINT_LENGTH);
-	nvixnu__array_map(bfs.labels + bfs.dest_length - PRINT_LENGTH, sizeof(int), PRINT_LENGTH, nvixnu__print_item_int);
+	//nvixnu__array_map(bfs.labels + bfs.dest_length - PRINT_LENGTH, sizeof(int), PRINT_LENGTH, nvixnu__print_item_int);
+	nvixnu__array_map(bfs.labels, sizeof(int), bfs.edges_length-1, nvixnu__print_item_int);
 
 	free(bfs.dest);
 	free(bfs.edges);

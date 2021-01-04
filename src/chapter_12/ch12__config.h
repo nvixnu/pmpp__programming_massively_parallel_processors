@@ -12,15 +12,17 @@
 #define CHAPTER_12_H_
 
 #include "../utils.h"
-#include "../datasets_info.h" //Credit card dataset info
+#include "../datasets_info.h"
 
-#define CH12__DEST_FILEPATH CREDIT_CARD_DATASET_PATH
-#define CH12__DEST_LENGTH CREDIT_CARD_DATASET_LENGTH
+#define CH12__DEST_FILEPATH "../datasets/graphs/example_destination.txt"
+#define CH12__DEST_LENGTH 15
 
-#define CH12__EDGES_FILEPATH CREDIT_CARD_DATASET_PATH
-#define CH12__EDGES_LENGTH CREDIT_CARD_DATASET_LENGTH
+#define CH12__EDGES_FILEPATH "../datasets/graphs/example_edges.txt"
+#define CH12__EDGES_LENGTH 10
 
-#define CH12__MAX_FRONTIER_LENGTH 50
+#define CH12__MAX_FRONTIER_LENGTH 10
+
+#define CH12__BLOCK_LEVEL_QUEUE "BLOCK_LEVEL_QUEUE"
 
 /**
  * Performs the Breadth-first search on host and device
