@@ -245,6 +245,22 @@ static inline void chapter_10_menu(){
 	ch10__spmv(Host, {});
 }
 
+static inline void chapter_11_menu(){
+	printf("Chapter 11\n");
+	printf("Running [ch11__merge_sort Basic] on Device:\n");
+	ch11__merge_sort(Device, {.block_dim = {1024, 1, 1}, .kernel_version = CH11__BASIC_MERGE_SORT});
+
+	printf("Running [ch11__merge_sort tiled] on Device:\n");
+	ch11__merge_sort(Device, {.block_dim = {256}, .kernel_version = CH11__TILED_MERGE_SORT});
+
+	printf("Running [ch11__merge_sort circular buffer] on Device:\n");
+	ch11__merge_sort(Device, {.block_dim = {256, 1, 1}, .kernel_version = CH11__CIRCULAR_BUFFER_MERGE_SORT});
+
+
+	printf("\nRunning [ch11__merge_sort] on Host...\n");
+	ch11__merge_sort(Host, {});
+}
+
 
 
 int main(void){
@@ -285,16 +301,21 @@ int main(void){
 			chapter_10_menu();
 			main = -1;
 			break;
+		case 11:
+			chapter_11_menu();
+			main = -1;
+			break;
 		default:
 			printf("\nCHAPTERS:\n");
-			printf("\t[Chapter 2] - Data parallel computing (vector addition)\n");
-			printf("\t[Chapter 3] - Scalable parallel execution (Image Grayscale and Blur)\n");
-			printf("\t[Chapter 4] - Memory and data locality (Matrix Multiplication)\n");
-			printf("\t[Chapter 5] - Performance considerations (Array reduction)\n");
-			printf("\t[Chapter 7] - Parallel patterns: convolution (1D and 2D convolution)\n");
-			printf("\t[Chapter 8] - Parallel patterns: prefix sum (Sequential, Kogge-Stone and Brent-Kung versions)\n");
-			printf("\t[Chapter 9] - Parallel patterns: parallel histogram computation\n");
-			printf("\t[Chapter 10] - Parallel patterns: sparse matrix computation computation\n");
+			printf("\t[Chapter 02] - Data parallel computing (vector addition)\n");
+			printf("\t[Chapter 03] - Scalable parallel execution (Image Grayscale and Blur)\n");
+			printf("\t[Chapter 04] - Memory and data locality (Matrix Multiplication)\n");
+			printf("\t[Chapter 05] - Performance considerations (Array reduction)\n");
+			printf("\t[Chapter 07] - Parallel patterns: convolution (1D and 2D convolution)\n");
+			printf("\t[Chapter 08] - Parallel patterns: prefix sum (Sequential, Kogge-Stone and Brent-Kung versions)\n");
+			printf("\t[Chapter 09] - Parallel patterns: parallel histogram computation\n");
+			printf("\t[Chapter 10] - Parallel patterns: sparse matrix computation\n");
+			printf("\t[Chapter 11] - Parallel patterns: merge sort\n");
 			printf("\nPress the chapter number or zero to exit.\n");
 			scanf("%d", &main);
 			setbuf(stdin, NULL);

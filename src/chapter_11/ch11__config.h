@@ -14,11 +14,11 @@
 #include "../utils.h"
 #include "../datasets_info.h" //Credit card dataset info
 
-#define CH11__A_FILEPATH CREDIT_CARD_DATASET_PATH
-#define CH11__A_LENGTH CREDIT_CARD_DATASET_LENGTH
+#define CH11__A_FILEPATH "../datasets/lists/ordered_5_int.txt"
+#define CH11__A_LENGTH 5
 
-#define CH11__B_FILEPATH CREDIT_CARD_DATASET_PATH
-#define CH11__B_LENGTH CREDIT_CARD_DATASET_LENGTH
+#define CH11__B_FILEPATH "../datasets/lists/ordered_4_int.txt"
+#define CH11__B_LENGTH 4
 
 #define CH11__C_LENGTH (CH11__A_LENGTH+CH11__B_LENGTH)
 

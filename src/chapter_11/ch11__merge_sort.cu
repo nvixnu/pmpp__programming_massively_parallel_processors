@@ -85,10 +85,10 @@ int ch11__co_rank(int k, int *A, int m, int *B, int n) {
 	int i_low = 0>(k-n) ? 0 : k-n; //i_low = max(0, k-n)
 	int j_low = 0>(k-m) ? 0 : k-m; //i_low = max(0, k-m)
 	int delta;
-	bool active = true;
+	int active = 1;
 	while(active){
 		if (i > 0 && j < n && A[i-1] > B[j]) {
-			delta = ((i - i_low +1) >> 1); // ceil(i-i_low)/2)
+			delta = ceil((i-i_low)/2.0);
 			j_low = j;
 			j = j + delta;
 			i = i - delta;
@@ -98,7 +98,7 @@ int ch11__co_rank(int k, int *A, int m, int *B, int n) {
 			i = i + delta;
 			j = j - delta;
 		}else {
-			active = false;
+			active = 0;
 		}
 	}
 	return i;
@@ -119,7 +119,7 @@ int ch11__co_rank_circular(int k, int* A, int m, int* B, int n, int A_S_start, i
 		int j_cir = (B_S_start+j >= tile_size) ? B_S_start+j-tile_size : B_S_start+j;
 		int j_m_1_cir = (B_S_start+i-1 >= tile_size)?B_S_start+j-1-tile_size: B_S_start+j-1;
 		if (i > 0 && j < n && A[i_m_1_cir] > B[j_cir]) {
-			delta = ((i-i_low +1) >> 1) ; // ceil(i-i_low)/2)
+			delta = ceil((i-i_low)/2.0);
 			j_low = j;
 			i = i - delta;
 			j = j + delta;
@@ -139,8 +139,8 @@ __global__
 void ch11__circular_buffer_merge_kernel(int* A, int m, int* B, int n, int* C, int tile_size){
 	/* shared memory allocation */
 	extern __shared__ int shareAB[];
-	int * A_S = &shareAB[0]; //shareA is first half of shareAB
-	int * B_S = &shareAB[tile_size]; //ShareB is second half of ShareAB
+	int *A_S = &shareAB[0]; //shareA is first half of shareAB
+	int *B_S = &shareAB[tile_size]; //ShareB is second half of ShareAB
 	int C_curr = blockIdx.x * ceil((m+n)/(double)gridDim.x);
 	// starting point of the C subarray for current block
 	int C_next = minimal((blockIdx.x+1) * ceil((m+n)/(double)gridDim.x), (m+n));
@@ -174,13 +174,13 @@ void ch11__circular_buffer_merge_kernel(int* A, int m, int* B, int n, int* C, in
 		/* loading A_S_consumed elements into A_S */
 		for(int i=0; i<A_S_consumed; i+=blockDim.x){
 			if( i + threadIdx.x < A_length - A_consumed && i + threadIdx.x < A_S_consumed){
-				//A_S[(A_S_start + i + threadIdx.x)%tile_size] = A[A_curr + A_consumed + i + threadIdx.x ];
+				A_S[(A_S_start + i + threadIdx.x)%tile_size] = A[A_curr + A_consumed + i + threadIdx.x ];
 			}
 		}
 		/* loading B_S_consumed elements into B_S */
 		for(int i=0; i<B_S_consumed; i+=blockDim.x){
 			if(i + threadIdx.x < B_length - B_consumed && i + threadIdx.x < B_S_consumed){
-				//B_S[(B_S_start + i + threadIdx.x)%tile_size] = B[B_curr + B_consumed + i + threadIdx.x];
+				B_S[(B_S_start + i + threadIdx.x)%tile_size] = B[B_curr + B_consumed + i + threadIdx.x];
 			}
 		}
 
@@ -237,7 +237,7 @@ void ch11__tiled_merge_kernel(int* A, int m, int* B, int n, int* C, int tile_siz
 
 	int C_curr = blockIdx.x * ceil((m+n)/(double)gridDim.x) ;
 	// starting point of the C subarray for current block
-	int C_next = minimal((blockIdx.x+1) * ceil((m+n)/(double)gridDim.x), (m+n));
+	int C_next = minimal((int)(blockIdx.x+1)* ceil((m+n)/(double)gridDim.x), (m+n));
 	// starting point for next block
 	if (threadIdx.x == 0){
 		A_S[0] = ch11__co_rank(C_curr, A, m, B, n); // Make the block-level co-rank values visible to
@@ -255,7 +255,7 @@ void ch11__tiled_merge_kernel(int* A, int m, int* B, int n, int* C, int tile_siz
 	int C_length = C_next - C_curr;
 	int A_length = A_next - A_curr;
 	int B_length = B_next - B_curr;
-	int total_iteration = ceil((C_length)/(double)tile_size);
+	int total_iteration = ceil(C_length/(double)tile_size);
 	int C_completed = 0;
 	int A_consumed = 0;
 
@@ -290,7 +290,7 @@ void ch11__tiled_merge_kernel(int* A, int m, int* B, int n, int* C, int tile_siz
 		/* All threads call the sequential merge function */
 		ch11__merge_core(A_S+a_curr, a_next-a_curr, B_S+b_curr, b_next-b_curr,C+C_curr+C_completed+c_curr);
 		/* Update the A and B elements that have been consumed thus far */
-		counter ++;
+		counter++;
 		C_completed += tile_size;
 		A_consumed += ch11__co_rank(tile_size, A_S, tile_size, B_S, tile_size);
 		B_consumed = C_completed - A_consumed;
@@ -302,8 +302,11 @@ void ch11__tiled_merge_kernel(int* A, int m, int* B, int n, int* C, int tile_siz
 __global__
 void ch11__basic_merge_kernel(int *A, int m, int *B, int n, int* C){
 	int tid= blockIdx.x*blockDim.x + threadIdx.x;
-	int k_curr = tid*ceil((m+n)/(double)(blockDim.x*gridDim.x)); // start index of output
-	int k_next = minimal((tid+1)*ceil((m+n)/(double)(blockDim.x*gridDim.x)), m+n); // end index of output
+	int num_threads = blockDim.x*gridDim.x;
+	int section_size = ceil((m+n)/(double)num_threads);
+	int k_curr = tid*section_size; // start index of output
+	int k_next = minimal((tid+1)*section_size, m+n); // end index of output
+
 	int i_curr= ch11__co_rank(k_curr, A, m, B, n);
 	int i_next = ch11__co_rank(k_next, A, m, B, n);
 	int j_curr = k_curr -i_curr;
@@ -315,26 +318,26 @@ void ch11__basic_merge_kernel(int *A, int m, int *B, int n, int* C){
 void ch11__merge_sort_device(int *h_A, const int m, int *h_B, const int n, int *h_C, kernel_config_t config){
 	int *d_A, *d_B, *d_C;
 
-	cudaDeviceProp props = nvixnu__get_cuda_device_props(0);
+	//nvixnu__print_cuda_devices_props();
 
 	CCE(cudaMalloc(&d_A, m*sizeof(int)));
 	CCE(cudaMalloc(&d_B, n*sizeof(int)));
 	CCE(cudaMalloc(&d_C, (m+n)*sizeof(int)));
 
 	CCE(cudaMemcpy(d_A, h_A, m*sizeof(int), cudaMemcpyHostToDevice));
-	CCE(cudaMemcpy(d_B, h_A, n*sizeof(int), cudaMemcpyHostToDevice));
+	CCE(cudaMemcpy(d_B, h_B, n*sizeof(int), cudaMemcpyHostToDevice));
 
 	const int block_dim = config.block_dim.x;
-	const int grid_dim = ceil((m+n)/block_dim);
-	const int shared_mem_size = props.sharedMemPerBlock;
+	const int grid_dim = ceil((m+n)/(double)block_dim);
+	size_t shared_memory = 2*block_dim*sizeof(int);
 
 	DEVICE_TIC(0);
 	if(!strcmp(config.kernel_version, CH11__BASIC_MERGE_SORT)){
 		ch11__basic_merge_kernel<<<grid_dim, block_dim>>>(d_A, m, d_B, n, d_C);
 	}else if(!strcmp(config.kernel_version, CH11__TILED_MERGE_SORT)){
-		ch11__tiled_merge_kernel<<<grid_dim, block_dim, shared_mem_size>>>(d_A, m, d_B, n, d_C, block_dim);
+		ch11__tiled_merge_kernel<<<grid_dim, block_dim, shared_memory>>>(d_A, m, d_B, n, d_C, block_dim);
 	}else if(!strcmp(config.kernel_version, CH11__CIRCULAR_BUFFER_MERGE_SORT)){
-		ch11__circular_buffer_merge_kernel<<<grid_dim, block_dim, shared_mem_size>>>(d_A, m, d_B, n, d_C, block_dim);
+		ch11__circular_buffer_merge_kernel<<<grid_dim, block_dim, shared_memory>>>(d_A, m, d_B, n, d_C, block_dim);
 	}else{
 		printf("\nINVALID KERNEL VERSION\n");
 		exit(1);
@@ -371,7 +374,7 @@ void ch11__merge_sort(env_e env, kernel_config_t config){
 	}
 
 	printf("Last %d values:\n", PRINT_LENGTH);
-	nvixnu__array_map(C + CH11__C_LENGTH - PRINT_LENGTH, sizeof(int), PRINT_LENGTH, nvixnu__print_item_int);
+	nvixnu__array_map(C, sizeof(int), CH11__C_LENGTH, nvixnu__print_item_int);
 
 	free(A);
 	free(B);
