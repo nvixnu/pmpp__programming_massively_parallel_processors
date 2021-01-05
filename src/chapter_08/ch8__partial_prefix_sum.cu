@@ -42,14 +42,13 @@ void ch8__partial_prefix_sum_device(double *h_input, double *h_output, const int
 
 	const int block_dim = config.block_dim.x;
 	const int grid_dim = ceil(length/(double)block_dim);
-	const int shared_memory = block_dim*sizeof(double);
+	size_t shared_memory = block_dim*sizeof(double);
 
 	CCE(cudaMalloc(&d_input, length*sizeof(double)));
 	CCE(cudaMalloc(&d_output, length*sizeof(double)));
 
 	CCE(cudaMemcpy(d_input, h_input, length*sizeof(double), cudaMemcpyHostToDevice));
 	CCE(cudaMemcpy(d_output, h_output, length*sizeof(double), cudaMemcpyHostToDevice));
-
 
 	DEVICE_TIC(0);
 	if(!strcmp(config.kernel_version, CH8__PREFIX_SUM_KOGGE_STONE)){

@@ -20,6 +20,9 @@
 #define LOREM_IPSUM_DATASET_BYTES 10000
 #define LOREM_IPSUM_DATASET_PATH "../datasets/lorem_ipsum/lipsum_17p_1478w_10000b.txt"
 
+#define PARALLEL_CAPACITOR_BETWEEN_PLATES_POINTS 2607745
+#define PARALLEL_CAPACITOR_BETWEEN_PLATES_PATH "../datasets/parallel_capacitor_between_plates/TRI5210112_PTS2607745_p.txt"
+
 
 #define IMG_FOLDER "../datasets/images/"
 #define IMG_GREEN_FIELD IMG_FOLDER "green_field.jpg"
