@@ -27,6 +27,7 @@ typedef struct {
 	int max_frontier_length;
 	int c_frontier_tail = 0;
 	int p_frontier_tail = 0;
+	int frontier_length = 100;
 } bfs_t;
 
 
@@ -37,9 +38,10 @@ void insert_frontier(int val, int *array, int *tail){
 
 __global__
 void ch12__bfs_kernel(int *p_frontier, int *p_frontier_tail, int *c_frontier,
-	int *c_frontier_tail, int *edges, int *dest, int *label, int* visited, const int block_queue_length) {
+	int *c_frontier_tail, int *edges, int *dest, int *label, int* visited, const int block_queue_length, const int src) {
 	extern __shared__ unsigned int c_frontier_s[];
 	__shared__ unsigned int c_frontier_tail_s, our_c_frontier_tail;
+
 	if(threadIdx.x == 0){
 		c_frontier_tail_s = 0;
 	}
@@ -54,7 +56,7 @@ void ch12__bfs_kernel(int *p_frontier, int *p_frontier_tail, int *c_frontier,
 				const unsigned int my_tail = atomicAdd(&c_frontier_tail_s, 1);
 				if(my_tail < block_queue_length) {
 					c_frontier_s[my_tail] = dest[i];
-				} else { // IE full, add it to the global queve directly
+				} else { // IE full, add it to the global queue directly
 					c_frontier_tail_s = block_queue_length;
 					const unsigned int my_global_tail = atomicAdd(c_frontier_tail, 1);
 					c_frontier[my_global_tail] = dest[i];
@@ -65,11 +67,13 @@ void ch12__bfs_kernel(int *p_frontier, int *p_frontier_tail, int *c_frontier,
 	__syncthreads();
 	if(threadIdx.x == 0) {
 		our_c_frontier_tail = atomicAdd(c_frontier_tail, c_frontier_tail_s);
+		label[src] = 0;
 	}
 	__syncthreads();
 	for (unsigned int i = threadIdx.x; i < c_frontier_tail_s; i += blockDim.x) {
 		c_frontier[our_c_frontier_tail + i] = c_frontier_s[i];
 	}
+
 }
 
 
@@ -85,9 +89,8 @@ void ch12__bfs_device(bfs_t h_bfs, kernel_config_t config){
 	// allocate c_frontier_tail_d, p_frontier_tail_d in device global memory
 
 	int *d_edges, *d_labels, *d_dest, *d_visited, *d_c_frontier, *d_p_frontier, *d_c_frontier_tail, *d_p_frontier_tail;
-	int *p_frontier_tail;
-
-	p_frontier_tail = (int *)malloc(sizeof(int));
+	int p_frontier_tail;
+	const int ZERO = 0, ONE = 1;
 
 	CCE(cudaMalloc(&d_edges, h_bfs.edges_length*sizeof(int)));
 	CCE(cudaMalloc(&d_labels, h_bfs.dest_length*sizeof(int)));
@@ -102,28 +105,22 @@ void ch12__bfs_device(bfs_t h_bfs, kernel_config_t config){
 	CCE(cudaMemcpy(d_edges, h_bfs.edges, h_bfs.edges_length*sizeof(int), cudaMemcpyHostToDevice));
 	CCE(cudaMemcpy(d_dest, h_bfs.dest, h_bfs.dest_length*sizeof(int), cudaMemcpyHostToDevice));
 	CCE(cudaMemcpy(d_labels, h_bfs.labels, h_bfs.dest_length*sizeof(int), cudaMemcpyHostToDevice));
-
-
-	CCE(cudaMemset(d_c_frontier_tail, 0, sizeof(int)));
-	CCE(cudaMemset(d_p_frontier, h_bfs.src, sizeof(int)));
-	CCE(cudaMemset(d_p_frontier_tail, 1, sizeof(int)));
-
+	CCE(cudaMemcpy(d_c_frontier_tail, &ZERO, sizeof(int), cudaMemcpyHostToDevice));
+	CCE(cudaMemcpy(d_p_frontier_tail, &ONE, sizeof(int), cudaMemcpyHostToDevice));
+	CCE(cudaMemcpy(d_p_frontier, &h_bfs.src, sizeof(int), cudaMemcpyHostToDevice));
 
 	const int block_dim = config.block_dim.x;
-
-
 	DEVICE_TIC(0);
 	if(!strcmp(config.kernel_version, CH12__BLOCK_LEVEL_QUEUE)){
-		*p_frontier_tail = 1;
-		while (*p_frontier_tail > 0) {
-			int grid_dim = ceil(*p_frontier_tail/(double)block_dim);
+		p_frontier_tail = 1;
+		while (p_frontier_tail > 0) {
+			int grid_dim = ceil(p_frontier_tail/(double)block_dim);
+			ch12__bfs_kernel<<<grid_dim, block_dim, (h_bfs.frontier_length + 2)*sizeof(int)>>>(d_p_frontier, d_p_frontier_tail,
+					d_c_frontier, d_c_frontier_tail, d_edges, d_dest, d_labels, d_visited, h_bfs.frontier_length, h_bfs.src);
 
-			ch12__bfs_kernel<<<grid_dim, block_dim, 1000>>>(d_p_frontier, d_p_frontier_tail,
-					d_c_frontier, d_c_frontier_tail, d_edges, d_dest, d_labels, d_visited, 100);
-			CCLE();
 			// use cudaMemcpy to read the *c_frontier_tail value back to host and assign
 			// it to p_frontier_tail for the while-loop condition test
-			CCE(cudaMemcpy(p_frontier_tail, d_c_frontier_tail, sizeof(int), cudaMemcpyDeviceToHost));
+			CCE(cudaMemcpy(&p_frontier_tail, d_c_frontier_tail, sizeof(int), cudaMemcpyDeviceToHost));
 
 			int* temp = d_c_frontier;
 			d_c_frontier = d_p_frontier;
@@ -148,8 +145,6 @@ void ch12__bfs_device(bfs_t h_bfs, kernel_config_t config){
 	CCE(cudaFree(d_p_frontier));
 	CCE(cudaFree(d_c_frontier_tail));
 	CCE(cudaFree(d_p_frontier_tail));
-
-	free(p_frontier_tail);
 }
 
 void ch12__bfs_host(bfs_t bfs){
@@ -181,7 +176,7 @@ void ch12__bfs_host(bfs_t bfs){
 void ch12__bfs(env_e env, kernel_config_t config){
 	bfs_t bfs;
 
-	bfs.src = 0;
+	bfs.src = 2;
 	bfs.dest_length = CH12__DEST_LENGTH;
 	bfs.edges_length = CH12__EDGES_LENGTH;
 	bfs.max_frontier_length = CH12__MAX_FRONTIER_LENGTH;
@@ -193,7 +188,10 @@ void ch12__bfs(env_e env, kernel_config_t config){
 	bfs.edges = (int *)malloc(bfs.edges_length*sizeof(int));
 	bfs.labels = (int *)malloc(bfs.dest_length*sizeof(int));
 
-	memset(bfs.labels, -1, bfs.dest_length*sizeof(int));
+	for(int i = 0; i < bfs.dest_length; i++){
+		bfs.labels[i] = -1;
+	}
+
 	bfs.labels[bfs.src] = 0;
 
 
