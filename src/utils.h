@@ -1,5 +1,5 @@
 /*
- * timer.h
+ * utils.h
  *
  *  Created on: 30/11/2020
  *  Author: Nvixnu
@@ -14,6 +14,17 @@
  * Converts a number to string
  */
 #define NUM2STR(x) STR_HELPER(x)
+
+
+/**
+ * Macro to clean the terminal
+ */
+#ifdef _WIN32
+#include <conio.h>
+#else
+#include <stdio.h>
+#define clrscr() printf("\e[1;1H\e[2J")
+#endif
 
 /**
  * Calculates the elapsed time from the struct timespec start and stop values
