@@ -17,55 +17,7 @@
 #include "nvixnu__error_utils.h"
 #include "nvixnu__prefix_sum.h"
 
-__global__
-void ch8__single_pass_kogge_stone_scan(double *input, double *output, const int length, volatile double *scan_value, unsigned int *flags, unsigned int *block_counter){
-	extern __shared__ double section_sums[];
-	__shared__ float previous_sum;
-	__shared__ int sbid;
 
-	if(threadIdx.x == 0){
-		sbid = atomicAdd(block_counter, 1);
-	}
-
-	__syncthreads();
-
-	const int bid = sbid;
-	const int tid = bid*blockDim.x + threadIdx.x;
-
-
-	if(tid < length){
-		section_sums[threadIdx.x] = input[tid];
-	}else{
-		section_sums[threadIdx.x] = 0.0;
-	}
-
-	unsigned int stride;
-	for( stride= 1; stride < blockDim.x; stride *= 2){
-		__syncthreads();
-		if(threadIdx.x >= stride){
-			section_sums[threadIdx.x] += section_sums[threadIdx.x - stride];
-		}
-	}
-
-	__syncthreads();
-
-	if(threadIdx.x == 0){
-		//wait for the previous flag
-		while(atomicAdd(&flags[bid], 0) == 0);
-		//Reads previous partial sum
-		previous_sum = scan_value[bid];
-		//propagate partial sum
-		scan_value[bid + 1]  = previous_sum + section_sums[blockDim.x -1];
-
-		//memory fence
-		__threadfence();
-		//Set flag
-		atomicAdd(&flags[bid + 1], 1);
-	}
-	__syncthreads();
-
-	output[tid] = previous_sum + section_sums[threadIdx.x];
-}
 
 __global__
 void ch8__increment_section(double *base, double *output, const int length){
@@ -119,7 +71,7 @@ void ch8__full_prefix_sum_device(double *h_input, double *h_output, const int le
 	CCE(cudaMemset(d_flags, 1, sizeof(unsigned int)));
 	CCE(cudaMemset(d_flags + 1, 0, grid_dim*sizeof(unsigned int)));
 	CCE(cudaMemset(d_block_counter, 0, sizeof(unsigned int)));
-	CCE(cudaMemset((void *)d_block_sum_volatile, 0.0, grid_dim*sizeof(double)));
+	//CCE(cudaMemset((void *)d_block_sum_volatile, 0, grid_dim*sizeof(double)));
 
 
 	DEVICE_TIC(0);
@@ -136,9 +88,8 @@ void ch8__full_prefix_sum_device(double *h_input, double *h_output, const int le
 		ch8__3_phase_increment_section<<<grid_dim_3_phase, block_dim>>>(d_block_sum, d_output, length, section_length);
 		CCLE();
 	}else if(!strcmp(config.kernel_version, CH8__SINGLE_PASS_PREFIX_SUM_KOGGE_STONE)){
-		ch8__single_pass_kogge_stone_scan<<<grid_dim, block_dim, config.shared_memory_size>>>(d_input, d_output, length, d_block_sum_volatile, d_flags, d_block_counter);
-	}else if(!strcmp(config.kernel_version, CH8__SINGLE_PASS_PREFIX_SUM_3_PHASE_KOGGE_STONE)){
-
+		nvixnu__single_pass_kogge_stone_full_scan_kernel<<<grid_dim, block_dim, config.shared_memory_size>>>(d_input, d_output, length, d_block_sum_volatile, d_flags, d_block_counter);
+		CCLE();
 	}else{
 		printf("\nINVALID KERNEL VERSION\n");
 		exit(1);
@@ -173,9 +124,6 @@ void ch8__full_prefix_sum(env_e env, kernel_config_t config){
 
 	nvixnu__populate_array_from_file(CH8__FILEPATH, "%lf,", CH8__ARRAY_LENGTH, sizeof(double), input);
 
-//	for(int i = 0; i < CH8__ARRAY_LENGTH; i++){
-//		input[i] = i;
-//	}
 
 	if(env == Host){
 		ch8__full_prefix_sum_host(input, output, CH8__ARRAY_LENGTH);
@@ -185,7 +133,6 @@ void ch8__full_prefix_sum(env_e env, kernel_config_t config){
 
 	printf("Last %d values:\n", PRINT_LENGTH);
 	nvixnu__array_map(output + CH8__ARRAY_LENGTH - PRINT_LENGTH, sizeof(double), PRINT_LENGTH, nvixnu__print_item_double);
-	//nvixnu__array_map(output, sizeof(double), CH8__ARRAY_LENGTH, nvixnu__print_item_double);
 
 	free(input);
 	free(output);
