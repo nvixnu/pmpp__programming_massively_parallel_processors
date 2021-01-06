@@ -14,92 +14,8 @@
 #include "nvixnu__array_utils.h"
 #include "nvixnu__populate_arrays_utils.h"
 #include "nvixnu__error_utils.h"
+#include "nvixnu__histogram.h"
 
-
-__global__
-void ch9__histogram_aggregated_kernel(char* input, const int input_length, int* output, const int output_length) {
-	extern __shared__ unsigned int histo_s[];
-	unsigned int tid = blockIdx.x*blockDim.x + threadIdx.x;
-
-	for(unsigned int binIdx = threadIdx.x; binIdx < output_length; binIdx +=blockDim.x) {
-		histo_s[binIdx] = 0u;
-	}
-	__syncthreads();
-	int prev_index = -1;
-	int accumulator = 0;
-
-	for(unsigned int i = tid; i < input_length; i += blockDim.x*gridDim.x) {
-		int alphabet_position = input[i] - 'a';
-		if (alphabet_position >= 0 && alphabet_position < 26) {
-			unsigned int curr_index = alphabet_position/4;
-			if (curr_index != prev_index) {
-				if (accumulator >= 0) atomicAdd(&(histo_s[alphabet_position/4]), accumulator);
-				accumulator = 1;
-				prev_index = curr_index;
-			}
-			else {
-				accumulator++;
-			}
-		}
-	}
-	__syncthreads();
-
-	for(unsigned int binIdx = threadIdx.x; binIdx < output_length; binIdx += blockDim.x) {
-		atomicAdd(&(output[binIdx]), histo_s[binIdx]);
-	}
-}
-
-
-__global__
-void ch9__histogram_privatized_kernel(char* input, const int input_length, int* output, const int output_length) {
-	extern __shared__ unsigned int histo_s[];
-
-	unsigned int tid = blockIdx.x*blockDim.x + threadIdx.x;
-
-
-	for(unsigned int binIdx = threadIdx.x; binIdx < output_length; binIdx +=blockDim.x) {
-		histo_s[binIdx] = 0;
-	}
-	__syncthreads();
-
-	for (unsigned int i = tid; i < input_length; i += blockDim.x*gridDim.x) {
-		int alphabet_position = input[i] - 'a';
-		if (alphabet_position >= 0 && alphabet_position < 26){
-			atomicAdd(&(histo_s[alphabet_position/4]), 1);
-		}
-	}
-	__syncthreads();
-	for(unsigned int binIdx = threadIdx.x; binIdx < output_length; binIdx += blockDim.x) {
-		atomicAdd(&(output[binIdx]), histo_s[binIdx]);
-	}
-}
-
-__global__
-void ch9__histogram_with_interleaved_partitioning_kernel(char *input, const int length, int *output){
-	unsigned int tid = threadIdx.x + blockIdx.x * blockDim.x;
-	for (unsigned int i = tid; i < length; i += blockDim.x*gridDim.x ) {
-		int alphabet_position = input[i] - 'a';
-		if (alphabet_position >= 0 && alphabet_position < 26){
-			atomicAdd(&(output[alphabet_position/4]), 1);
-		}
-	}
-}
-
-__global__
-void ch9__histogram_with_block_partitioning_kernel(char *input, const int length, int *output){
-	int i = threadIdx.x + blockIdx.x * blockDim.x;
-	int section_size = ceil(length/(double)(blockDim.x * gridDim.x));
-	int start = i*section_size;
-
-	for (int k = 0; k < section_size; k++) {
-		if (start+k < length) {
-			int alphabet_position = input[start+k] - 'a';
-			if (alphabet_position >= 0 && alphabet_position < 26){
-				atomicAdd(&(output[alphabet_position/4]), 1);
-			}
-		}
-	}
-}
 
 void ch9__parallel_histogram_device(char *h_input, const int input_length, int *h_output, const int output_length , kernel_config_t config){
 	char *d_input;
@@ -117,16 +33,16 @@ void ch9__parallel_histogram_device(char *h_input, const int input_length, int *
 
 	DEVICE_TIC(0);
 	if(!strcmp(config.kernel_version, CH9__HISTOGRAM_WITH_BLOCK_PARTITIONING)){
-		ch9__histogram_with_block_partitioning_kernel<<<grid_dim, block_dim>>>(d_input, input_length, d_output);
+		nvixnu__histogram_with_block_partitioning_kernel<<<grid_dim, block_dim>>>(d_input, input_length, d_output);
 		CCLE();
 	}else if(!strcmp(config.kernel_version, CH9__HISTOGRAM_WITH_INTERLEAVED_PARTITIONING)){
-		ch9__histogram_with_interleaved_partitioning_kernel<<<grid_dim, block_dim>>>(d_input, input_length, d_output);
+		nvixnu__histogram_with_interleaved_partitioning_kernel<<<grid_dim, block_dim>>>(d_input, input_length, d_output);
 		CCLE();
 	}else if(!strcmp(config.kernel_version, CH9__HISTOGRAM_PRIVATIZED)){
-		ch9__histogram_privatized_kernel<<<grid_dim, block_dim, shared_memory>>>(d_input, input_length, d_output, output_length);
+		nvixnu__histogram_privatized_kernel<<<grid_dim, block_dim, shared_memory>>>(d_input, input_length, d_output, output_length);
 		CCLE();
 	}else if(!strcmp(config.kernel_version, CH9__HISTOGRAM_AGGREGATED)){
-		ch9__histogram_aggregated_kernel<<<grid_dim, block_dim, shared_memory>>>(d_input, input_length, d_output, output_length);
+		nvixnu__histogram_aggregated_kernel<<<grid_dim, block_dim, shared_memory>>>(d_input, input_length, d_output, output_length);
 		CCLE();
 	}else{
 		printf("\nINVALID KERNEL VERSION\n");
@@ -140,14 +56,11 @@ void ch9__parallel_histogram_device(char *h_input, const int input_length, int *
 	CCE(cudaFree(d_output));
 }
 
+
+
 void ch9__parallel_histogram_host(char *input, const int length, int *output){
 	HOST_TIC(0);
-	for (int i = 0; i < length; i++) {
-		int alphabet_position = input[i] - 'a';
-		if (alphabet_position >= 0 && alphabet_position < 26) {
-			output[alphabet_position/4]++;
-		}
-	}
+	nvixnu__histogram_host(input, length, output);
 	HOST_TOC(0)
 }
 
