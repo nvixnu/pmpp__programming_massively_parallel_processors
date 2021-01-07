@@ -114,6 +114,7 @@ void ch10__ell_spmv_device(ell_t h_ell, double *h_v, double *h_y, sparse_t dims,
 	DEVICE_TIC(0);
 	if(!strcmp(config.kernel_version, CH10__SPMV_ELL)){
 		ch10__ell_spmv_kernel<<<grid_dim, block_dim>>>(d_ell.data, d_ell.idx, dims.largest_row_width, dims.rows, d_v, d_y);
+		CCLE();
 	}else{
 		printf("\nINVALID KERNEL VERSION\n");
 		exit(1);
@@ -166,7 +167,7 @@ void csr2ell(sparse_t dims, csr_t csr, ell_t ell){
 void ch10__spmv(env_e env, kernel_config_t config){
 	csr_t csr;
 	double *y, *v;
-	sparse_t dims = {CH10__INPUT_ROWS, CH10__INPUT_COLS, CH10__INPUT_NON_ZERO_LENGTH, CH10__INPUT_LARGEST_NONZERO_ROW_WIDTH};
+	sparse_t dims = {CH10__INPUT_NON_ZERO_LENGTH, CH10__INPUT_ROWS, CH10__INPUT_COLS, CH10__INPUT_LARGEST_NONZERO_ROW_WIDTH};
 
 	csr.data = (double *)malloc(CH10__INPUT_NON_ZERO_LENGTH*sizeof(double));
 	csr.col_idx = (int *)malloc(CH10__INPUT_NON_ZERO_LENGTH*sizeof(int));
