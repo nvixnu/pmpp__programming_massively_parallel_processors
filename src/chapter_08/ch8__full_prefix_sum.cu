@@ -15,7 +15,7 @@
 #include "nvixnu__array_utils.h"
 #include "nvixnu__populate_arrays_utils.h"
 #include "nvixnu__error_utils.h"
-#include "nvixnu__prefix_sum.h"
+#include "pmpp__prefix_sum.h"
 
 
 
@@ -79,16 +79,16 @@ void ch8__full_prefix_sum_device(double *h_input, double *h_output, const int le
 		const int section_length = config.shared_memory_size/sizeof(double);
 		const int grid_dim_3_phase = ceil(length/(double)section_length); //The grid_dim is specified according to the shared memory instead of block_dim
 		const int grid_dim_3_phase_step_2 = ceil(grid_dim_3_phase/(double)section_length);
-		nvixnu__3_phase_kogge_stone_scan_by_block_kernel<<<grid_dim_3_phase, block_dim, config.shared_memory_size>>>(d_input, d_output, length, section_length, d_block_sum);
+		pmpp__3_phase_kogge_stone_scan_by_block_kernel<<<grid_dim_3_phase, block_dim, config.shared_memory_size>>>(d_input, d_output, length, section_length, d_block_sum);
 		CCLE();
 		CCE(cudaDeviceSynchronize());
-		nvixnu__3_phase_kogge_stone_scan_by_block_kernel<<<grid_dim_3_phase_step_2, block_dim, config.shared_memory_size>>>(d_block_sum, d_block_sum, grid_dim_3_phase, section_length, NULL);
+		pmpp__3_phase_kogge_stone_scan_by_block_kernel<<<grid_dim_3_phase_step_2, block_dim, config.shared_memory_size>>>(d_block_sum, d_block_sum, grid_dim_3_phase, section_length, NULL);
 		CCLE();
 		CCE(cudaDeviceSynchronize());
 		ch8__3_phase_increment_section<<<grid_dim_3_phase, block_dim>>>(d_block_sum, d_output, length, section_length);
 		CCLE();
 	}else if(!strcmp(config.kernel_version, CH8__SINGLE_PASS_PREFIX_SUM_KOGGE_STONE)){
-		nvixnu__single_pass_kogge_stone_full_scan_kernel<<<grid_dim, block_dim, config.shared_memory_size>>>(d_input, d_output, length, d_block_sum_volatile, d_flags, d_block_counter);
+		pmpp__single_pass_kogge_stone_full_scan_kernel<<<grid_dim, block_dim, config.shared_memory_size>>>(d_input, d_output, length, d_block_sum_volatile, d_flags, d_block_counter);
 		CCLE();
 	}else{
 		printf("\nINVALID KERNEL VERSION\n");
@@ -111,7 +111,7 @@ void ch8__full_prefix_sum_device(double *h_input, double *h_output, const int le
 
 void ch8__full_prefix_sum_host(double *input, double *output, const int length){
 	HOST_TIC(0);
-	nvixnu__partial_prefix_sum_unit(input, output, length, 1);
+	pmpp__partial_prefix_sum_unit(input, output, length, 1);
 	HOST_TOC(0)
 }
 

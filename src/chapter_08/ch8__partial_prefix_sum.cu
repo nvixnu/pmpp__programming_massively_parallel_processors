@@ -15,7 +15,7 @@
 #include "nvixnu__array_utils.h"
 #include "nvixnu__populate_arrays_utils.h"
 #include "nvixnu__error_utils.h"
-#include "nvixnu__prefix_sum.h"
+#include "pmpp__prefix_sum.h"
 
 
 /**
@@ -27,10 +27,10 @@ void ch8__partial_prefix_sum_host(double *input, double *output, const int lengt
 	const int last_section_length = length - regular_sections_length;
 	HOST_TIC(0);
 	for(int i = 0; i < regular_sections_count; i++){
-		nvixnu__partial_prefix_sum_unit(input + i*section_length, output + i*section_length, section_length, stride);
+		pmpp__partial_prefix_sum_unit(input + i*section_length, output + i*section_length, section_length, stride);
 	}
 	if(last_section_length > 0){
-		nvixnu__partial_prefix_sum_unit(input + regular_sections_length, output + regular_sections_length, last_section_length, stride);
+		pmpp__partial_prefix_sum_unit(input + regular_sections_length, output + regular_sections_length, last_section_length, stride);
 	}
 
 	HOST_TOC(0)
@@ -52,13 +52,13 @@ void ch8__partial_prefix_sum_device(double *h_input, double *h_output, const int
 
 	DEVICE_TIC(0);
 	if(!strcmp(config.kernel_version, CH8__PREFIX_SUM_KOGGE_STONE)){
-		nvixnu__kogge_stone_scan_by_block_kernel<<<grid_dim, block_dim, shared_memory>>>(d_input, d_output, length, NULL);
+		pmpp__kogge_stone_scan_by_block_kernel<<<grid_dim, block_dim, shared_memory>>>(d_input, d_output, length, NULL);
 	}else if(!strcmp(config.kernel_version, CH8__PREFIX_SUM_BRENT_KUNG)){
-		nvixnu__brent_kung_scan_by_block_kernel<<<grid_dim, block_dim, shared_memory>>>(d_input, d_output, length, NULL);
+		pmpp__brent_kung_scan_by_block_kernel<<<grid_dim, block_dim, shared_memory>>>(d_input, d_output, length, NULL);
 	}else if(!strcmp(config.kernel_version, CH8__PREFIX_SUM_3_PHASE_KOGGE_STONE)){
 		const int buffer_length = config.shared_memory_size/sizeof(double);
 		const int grid_dim_3_phase = ceil(length/(double)buffer_length); //The grid_dim is specified according to the shared memory instead of block_dim
-		nvixnu__3_phase_kogge_stone_scan_by_block_kernel<<<grid_dim_3_phase, block_dim, config.shared_memory_size>>>(d_input, d_output, length, buffer_length, NULL);
+		pmpp__3_phase_kogge_stone_scan_by_block_kernel<<<grid_dim_3_phase, block_dim, config.shared_memory_size>>>(d_input, d_output, length, buffer_length, NULL);
 	}else{
 		printf("\nINVALID KERNEL VERSION\n");
 		exit(1);

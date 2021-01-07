@@ -13,7 +13,7 @@
 #include "ch5__config.h"
 #include "nvixnu__populate_arrays_utils.h"
 #include "nvixnu__error_utils.h"
-#include "nvixnu__reduction.h"
+#include "pmpp__reduction.h"
 
 
 double ch5__sum_reduction_device(double *h_v, const int length, kernel_config_t config){
@@ -35,14 +35,14 @@ double ch5__sum_reduction_device(double *h_v, const int length, kernel_config_t 
 
 	DEVICE_TIC(0);
 	// Reduces the d_v array (SIZE elements) to d_partial_sum array (with grid_dim elements)
-	nvixnu__sum_by_block_kernel<<<grid_dim, block_dim, block_dim*sizeof(double)>>>(d_v, d_partial_sum, length);
+	pmpp__sum_by_block_kernel<<<grid_dim, block_dim, block_dim*sizeof(double)>>>(d_v, d_partial_sum, length);
 	CCLE();
 	CCE(cudaDeviceSynchronize());
 
 	while(grid_dim > 1){ // Runs if addtional reductions are necessary (length > block_dim), since the kernel performs the reduction only inside each block
 		old_grid_dim = grid_dim;
 		grid_dim = ceil(grid_dim/(double)block_dim); // The array d_partial_sum has grid_dim elements, so instead length, we use grid_dim
-		nvixnu__sum_by_block_kernel<<<grid_dim, block_dim, block_dim*sizeof(double)>>>(d_partial_sum, d_partial_sum, old_grid_dim);
+		pmpp__sum_by_block_kernel<<<grid_dim, block_dim, block_dim*sizeof(double)>>>(d_partial_sum, d_partial_sum, old_grid_dim);
 		CCLE();
 		CCE(cudaDeviceSynchronize());
 	}

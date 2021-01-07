@@ -15,7 +15,7 @@
 #include "nvixnu__array_utils.h" //Map and print functions
 #include "nvixnu__error_utils.h"
 #include "nvixnu__populate_arrays_utils.h"
-#include "nvixnu__axpy.h"
+#include "pmpp__blas.h"
 
 
 void ch2__vec_add_device(double *h_x, double *h_y, const int length, kernel_config_t config){
@@ -31,7 +31,7 @@ void ch2__vec_add_device(double *h_x, double *h_y, const int length, kernel_conf
 	CCE(cudaMemcpy(d_y, h_y, length*sizeof(double), cudaMemcpyHostToDevice));
 
 	DEVICE_TIC(0);
-	nvixnu__axpy_kernel<<<ceil(length/(double)config.block_dim.x), config.block_dim.x>>>(1.0, d_x, d_y, length);
+	pmpp__axpy_kernel<<<ceil(length/(double)config.block_dim.x), config.block_dim.x>>>(1.0, d_x, d_y, length);
 	CCLE();
 	DEVICE_TOC(0);
 
@@ -45,7 +45,7 @@ void ch2__vec_add_device(double *h_x, double *h_y, const int length, kernel_conf
 
 void ch2__vec_add_host(double *x, double *y, const int length){
 	HOST_TIC(0);
-	nvixnu__axpy_host(1.0, x, y, length);
+	pmpp__axpy_host(1.0, x, y, length);
 	HOST_TOC(0);
 }
 

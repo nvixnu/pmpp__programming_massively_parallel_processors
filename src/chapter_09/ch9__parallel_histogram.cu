@@ -14,7 +14,7 @@
 #include "nvixnu__array_utils.h"
 #include "nvixnu__populate_arrays_utils.h"
 #include "nvixnu__error_utils.h"
-#include "nvixnu__histogram.h"
+#include "pmpp__histogram.h"
 
 
 void ch9__parallel_histogram_device(char *h_input, const int input_length, int *h_output, const int output_length , kernel_config_t config){
@@ -33,16 +33,16 @@ void ch9__parallel_histogram_device(char *h_input, const int input_length, int *
 
 	DEVICE_TIC(0);
 	if(!strcmp(config.kernel_version, CH9__HISTOGRAM_WITH_BLOCK_PARTITIONING)){
-		nvixnu__histogram_with_block_partitioning_kernel<<<grid_dim, block_dim>>>(d_input, input_length, d_output);
+		pmpp__histogram_with_block_partitioning_kernel<<<grid_dim, block_dim>>>(d_input, input_length, d_output);
 		CCLE();
 	}else if(!strcmp(config.kernel_version, CH9__HISTOGRAM_WITH_INTERLEAVED_PARTITIONING)){
-		nvixnu__histogram_with_interleaved_partitioning_kernel<<<grid_dim, block_dim>>>(d_input, input_length, d_output);
+		pmpp__histogram_with_interleaved_partitioning_kernel<<<grid_dim, block_dim>>>(d_input, input_length, d_output);
 		CCLE();
 	}else if(!strcmp(config.kernel_version, CH9__HISTOGRAM_PRIVATIZED)){
-		nvixnu__histogram_privatized_kernel<<<grid_dim, block_dim, shared_memory>>>(d_input, input_length, d_output, output_length);
+		pmpp__histogram_privatized_kernel<<<grid_dim, block_dim, shared_memory>>>(d_input, input_length, d_output, output_length);
 		CCLE();
 	}else if(!strcmp(config.kernel_version, CH9__HISTOGRAM_AGGREGATED)){
-		nvixnu__histogram_aggregated_kernel<<<grid_dim, block_dim, shared_memory>>>(d_input, input_length, d_output, output_length);
+		pmpp__histogram_aggregated_kernel<<<grid_dim, block_dim, shared_memory>>>(d_input, input_length, d_output, output_length);
 		CCLE();
 	}else{
 		printf("\nINVALID KERNEL VERSION\n");
@@ -60,7 +60,7 @@ void ch9__parallel_histogram_device(char *h_input, const int input_length, int *
 
 void ch9__parallel_histogram_host(char *input, const int length, int *output){
 	HOST_TIC(0);
-	nvixnu__histogram_host(input, length, output);
+	pmpp__histogram_host(input, length, output);
 	HOST_TOC(0)
 }
 

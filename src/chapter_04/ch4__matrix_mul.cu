@@ -12,7 +12,7 @@
 #include "nvixnu__populate_arrays_utils.h"
 #include "nvixnu__array_utils.h"
 #include "nvixnu__error_utils.h"
-#include "nvixnu__gemm.h"
+#include "pmpp__blas.h"
 
 
 void ch4__matrix_mul_device(double *h_A, double *h_B, double *h_C, const int i_length, const int j_length, const int k_length, kernel_config_t config){
@@ -36,10 +36,10 @@ void ch4__matrix_mul_device(double *h_A, double *h_B, double *h_C, const int i_l
 
 	DEVICE_TIC(0);
 	if(!strcmp(config.kernel_version, CH4__MATRIX_MUL_KERNEL_NAIVE)){
-		nvixnu__gemm_kernel<<<grid_dim, block_dim>>>(d_A, d_B, d_C, i_length, j_length, k_length);
+		pmpp__gemm_kernel<<<grid_dim, block_dim>>>(d_A, d_B, d_C, i_length, j_length, k_length);
 	}else if(!strcmp(config.kernel_version, CH4__MATRIX_MUL_KERNEL_TILED)){
 		const int shared_memory_length = 2*config.block_dim.x*config.block_dim.y*sizeof(double);
-		nvixnu__tiled_gemm_kernel<<<grid_dim, block_dim, shared_memory_length>>>(d_A, d_B, d_C, i_length, j_length, k_length, config.block_dim.x);
+		pmpp__tiled_gemm_kernel<<<grid_dim, block_dim, shared_memory_length>>>(d_A, d_B, d_C, i_length, j_length, k_length, config.block_dim.x);
 	}else{
 		printf("\nINVALID KERNEL VERSION\n");
 		exit(1);
@@ -57,7 +57,7 @@ void ch4__matrix_mul_device(double *h_A, double *h_B, double *h_C, const int i_l
 
 void ch4__matrix_mul_host(double *A, double *B, double *C, const int i_length, const int j_length, const int k_length){
 	HOST_TIC(0);
-	nvixnu__gemm_host(A, B, C, i_length, j_length, k_length);
+	pmpp__gemm_host(A, B, C, i_length, j_length, k_length);
 	HOST_TOC(0);
 }
 

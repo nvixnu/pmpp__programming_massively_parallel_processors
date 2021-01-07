@@ -13,7 +13,7 @@
 #include "nvixnu__populate_arrays_utils.h"
 #include "nvixnu__array_utils.h"
 #include "nvixnu__error_utils.h"
-#include "nvixnu__convolution.h"
+#include "pmpp__convolution.h"
 
 
 void ch7__1d_convolution_device(double *h_input, double *h_output, const int length, const double *h_mask, const int mask_width, kernel_config_t config){
@@ -30,7 +30,7 @@ void ch7__1d_convolution_device(double *h_input, double *h_output, const int len
 	const int grid_dim = ceil(length/(double)block_dim);
 
 	DEVICE_TIC(0);
-	nvixnu__1d_convolution_kernel<<<grid_dim, block_dim, block_dim*sizeof(double)>>>(d_input, d_output, length, d_mask, mask_width);
+	pmpp__1d_convolution_kernel<<<grid_dim, block_dim, block_dim*sizeof(double)>>>(d_input, d_output, length, d_mask, mask_width);
 	CCLE()
 	DEVICE_TOC(0);
 
@@ -43,7 +43,7 @@ void ch7__1d_convolution_device(double *h_input, double *h_output, const int len
 
 void ch7__1d_convolution_host(double *input, double *output, const int length, const double *mask, const int mask_width){
 	HOST_TIC(0);
-	nvixnu__1d_convolution_host(input, output, length, mask, mask_width);
+	pmpp__1d_convolution_host(input, output, length, mask, mask_width);
 	HOST_TOC(0);
 }
 
