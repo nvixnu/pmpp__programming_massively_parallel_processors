@@ -205,7 +205,7 @@ void ch10__spmv(env_e env, kernel_config_t config){
 	}
 
 	printf("Last %d values:\n", PRINT_LENGTH);
-	nvixnu__array_map(y, sizeof(double), 4, nvixnu__print_item_double);
+	nvixnu__array_map(y + CH10__INPUT_ROWS - PRINT_LENGTH, sizeof(double), PRINT_LENGTH, nvixnu__print_item_double);
 
 	free(csr.data);
 	free(csr.col_idx);

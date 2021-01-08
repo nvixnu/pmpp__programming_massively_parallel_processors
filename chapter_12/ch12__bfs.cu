@@ -205,8 +205,7 @@ void ch12__bfs(env_e env, kernel_config_t config){
 	}
 
 	printf("Last %d values:\n", PRINT_LENGTH);
-	//nvixnu__array_map(bfs.labels + bfs.dest_length - PRINT_LENGTH, sizeof(int), PRINT_LENGTH, nvixnu__print_item_int);
-	nvixnu__array_map(bfs.labels, sizeof(int), bfs.edges_length-1, nvixnu__print_item_int);
+	nvixnu__array_map(bfs.labels + bfs.dest_length - PRINT_LENGTH, sizeof(int), PRINT_LENGTH, nvixnu__print_item_int);
 
 	free(bfs.dest);
 	free(bfs.edges);

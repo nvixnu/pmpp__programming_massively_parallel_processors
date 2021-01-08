@@ -14,13 +14,13 @@
 #include "../utils.h"
 #include "../datasets_info.h"
 
-#define CH12__DEST_FILEPATH "../datasets/graphs/example_destination.txt"
-#define CH12__DEST_LENGTH 15
+#define CH12__DEST_FILEPATH "../datasets/sparse/nz80666_3000x3000/nz80666_3000x3000_col_idx.txt"
+#define CH12__DEST_LENGTH 80666
 
-#define CH12__EDGES_FILEPATH "../datasets/graphs/example_edges.txt"
-#define CH12__EDGES_LENGTH 10
+#define CH12__EDGES_FILEPATH "../datasets/sparse/nz80666_3000x3000/nz80666_3000x3000_row_ptr.txt"
+#define CH12__EDGES_LENGTH 3001
 
-#define CH12__MAX_FRONTIER_LENGTH 10
+#define CH12__MAX_FRONTIER_LENGTH 50
 
 #define CH12__BLOCK_LEVEL_QUEUE "BLOCK_LEVEL_QUEUE"
 
