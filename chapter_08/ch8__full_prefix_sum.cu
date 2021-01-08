@@ -71,7 +71,7 @@ void ch8__full_prefix_sum_device(double *h_input, double *h_output, const int le
 	CCE(cudaMemset(d_flags, 1, sizeof(unsigned int)));
 	CCE(cudaMemset(d_flags + 1, 0, grid_dim*sizeof(unsigned int)));
 	CCE(cudaMemset(d_block_counter, 0, sizeof(unsigned int)));
-	//CCE(cudaMemset((void *)d_block_sum_volatile, 0, grid_dim*sizeof(double)));
+	CCE(cudaMemset((void *)d_block_sum_volatile, 0, grid_dim*sizeof(double)));
 
 
 	DEVICE_TIC(0);
