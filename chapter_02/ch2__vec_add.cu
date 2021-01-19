@@ -57,6 +57,8 @@ void ch2__vec_add(env_e env, kernel_config_t config){
 	x = (double*)malloc(CH2__ARRAY_LENGTH*sizeof(double));
 	y = (double*)malloc(CH2__ARRAY_LENGTH*sizeof(double));
 
+	printf("%s\n", CH2__FILEPATH);
+
 	//Populates the arrays
 	nvixnu__populate_multiple_arrays_from_file(CH2__FILEPATH, "", "%lf,", "", CH2__ARRAY_LENGTH, sizeof(double), 2, x, y);
 
