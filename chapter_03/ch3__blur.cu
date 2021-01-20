@@ -124,3 +124,23 @@ void ch3__blur(env_e env, kernel_config_t config){
 	return;
 }
 
+
+
+int main(){
+	printf("Chapter 03: [blur]\n\n");
+	printf("Input: %s\n", CH3__INPUT_FILE_BLUR);	
+	printf("Device output: %s\n", CH3__OUTPUT_DEVICE_FILE_BLUR);
+	printf("Host output: %s\n\n", CH3__OUTPUT_HOST_FILE_BLUR);
+
+	printf("Running on Device with 256 threads per block...");
+	ch3__blur(Device, {.block_dim = {16,16,1}});
+
+	printf("\nRunning on Device with 1024 threads per block...");
+	ch3__blur(Device, {.block_dim = {32,32,1}});
+
+	printf("\nRunning on Host...");
+	ch3__blur(Host, {});
+
+	return 0;
+}
+
