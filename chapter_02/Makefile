@@ -1,6 +1,5 @@
 CC = nvcc
 OBJDIR = ./obj
-ROOTDIR = ../../
 
 DEPSNAMES = \
 nvixnu__array_utils \
