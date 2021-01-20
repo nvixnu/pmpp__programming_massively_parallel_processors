@@ -74,8 +74,10 @@ void ch2__vec_add(env_e env, kernel_config_t config){
 }
 
 int main(){
-	printf("Chapter 02: [vec_add]\n\n");
-	printf("Array with %d Elements\n\n", CH2__ARRAY_LENGTH);
+	printf("Chapter 02\n");
+	printf("Array with %d Elements\n", CH2__ARRAY_LENGTH);
+	
+	printf("\n_____ vec_add _____\n\n");
 
 	printf("Running on Device with 256 threads per block...");
 	ch2__vec_add(Device, {.block_dim = {256,1,1}});
@@ -83,7 +85,7 @@ int main(){
 	printf("\nRunning on Device with 1024 threads per block...");
 	ch2__vec_add(Device, {.block_dim = {1024,1,1}});
 
-	printf("\nRunning on Host...");
+	printf("\n_____ vec_add _____\n");
 	ch2__vec_add(Host, {});
 
 	return 0;

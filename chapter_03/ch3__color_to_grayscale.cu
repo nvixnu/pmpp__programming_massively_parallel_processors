@@ -112,10 +112,12 @@ void ch3__color_to_grayscale(env_e env, kernel_config_t config){
 }
 
 int main(){
-	printf("Chapter 03: [color_to_grayscale]\n\n");
+	printf("Chapter 03\n");
 	printf("Input: %s\n", CH3__INPUT_FILE_GRAY);	
 	printf("Device output: %s\n", CH3__OUTPUT_DEVICE_FILE_GRAY);
-	printf("Host output: %s\n\n", CH3__OUTPUT_HOST_FILE_GRAY);
+	printf("Host output: %s\n", CH3__OUTPUT_HOST_FILE_GRAY);
+
+	printf("\n_____ color_to_grayscale _____\n\n");
 
 	printf("Running on Device with 256 threads per block...");
 	ch3__color_to_grayscale(Device, {.block_dim = {16,16,1}});
@@ -123,7 +125,7 @@ int main(){
 	printf("\nRunning on Device with 1024 threads per block...");
 	ch3__color_to_grayscale(Device, {.block_dim = {32,32,1}});
 
-	printf("\nRunning on Host...");
+	printf("\n_____ color_to_grayscale_CPU _____\n");
 	ch3__color_to_grayscale(Host, {});
 
 	return 0;
