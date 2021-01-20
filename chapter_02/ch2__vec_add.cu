@@ -1,18 +1,19 @@
 /*
  * Programming Massively Parallel Processors - 3ed
- * Chapter 2
+ * Chapter 2 - Data Parallel Computing
  * In this chapter the vector addition and the error handlers functions are presented.
  * The "nvixnu__" libraries used here are available at https://gist.github.com/nvixnu.
- *
- *  Created on: 27/11/2020
- *  Author: Nvixnu
+ * The "pmpp__" libraries used are available at https://github.com/nvixnu
+ * Created on: 27/11/2020
+ * Author: Nvixnu
  */
+
 
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
 #include "ch2__config.h"
-#include "nvixnu__array_utils.h" //Map and print functions
+#include "nvixnu__array_utils.h"
 #include "nvixnu__error_utils.h"
 #include "nvixnu__populate_arrays_utils.h"
 #include "pmpp__blas.h"
@@ -38,7 +39,6 @@ void ch2__vec_add_device(double *h_x, double *h_y, const int length, kernel_conf
 	//Copies the result back to the heap
 	CCE(cudaMemcpy(h_y, d_y, length*sizeof(double), cudaMemcpyDeviceToHost));
 
-
 	CCE(cudaFree(d_x));
 	CCE(cudaFree(d_y));
 }
@@ -57,8 +57,6 @@ void ch2__vec_add(env_e env, kernel_config_t config){
 	x = (double*)malloc(CH2__ARRAY_LENGTH*sizeof(double));
 	y = (double*)malloc(CH2__ARRAY_LENGTH*sizeof(double));
 
-	printf("%s\n", CH2__FILEPATH);
-
 	//Populates the arrays
 	nvixnu__populate_multiple_arrays_from_file(CH2__FILEPATH, "", "%lf,", "", CH2__ARRAY_LENGTH, sizeof(double), 2, x, y);
 
@@ -73,4 +71,20 @@ void ch2__vec_add(env_e env, kernel_config_t config){
 
 	free(x);
 	free(y);
+}
+
+int main(){
+	printf("Chapter 02\n\n");
+	printf("Array with %d Elements\n\n", CH2__ARRAY_LENGTH);
+
+	printf("Running [vec_add] on Device with 256 threads per block:");
+	ch2__vec_add(Device, {.block_dim = {256,1,1}});
+
+	printf("\nRunning [vec_add] on Device with 1024 threads per block:");
+	ch2__vec_add(Device, {.block_dim = {1024,1,1}});
+
+	printf("\nRunning [vec_add] on Host:");
+	ch2__vec_add(Host, {});
+
+	return 0;
 }
