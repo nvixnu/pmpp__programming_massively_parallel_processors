@@ -40,6 +40,6 @@ run:
 # Remove the generated artifacts
 clean:
 	rm -Rf $(OBJDIR)/*.o
-	rm -Rf vec_add
+	rm -Rf vec_add.out
 
 .PHONY: all clean app run
