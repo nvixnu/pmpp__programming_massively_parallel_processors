@@ -92,3 +92,31 @@ void ch4__matrix_mul(env_e env, kernel_config_t config){
 	return;
 }
 
+
+int main(){
+	printf("Chapter 04\n");
+	printf("Matrix A: %dx%d\n", CH4__I_LENGTH, CH4__J_LENGTH);
+	printf("Matrix B: %dx%d\n", CH4__J_LENGTH, CH4__K_LENGTH);
+
+	printf("\n_____ matrix_mul _____\n\n");
+
+	printf("Running on Device with 256 threads per block...");
+	ch4__matrix_mul(Device, {.block_dim = {16,16,1}, .kernel_version = CH4__MATRIX_MUL_KERNEL_NAIVE});
+
+	printf("\nRunning  on Device with 1024 threads per block...");
+	ch4__matrix_mul(Device, {.block_dim = {32,32,1}, .kernel_version = CH4__MATRIX_MUL_KERNEL_NAIVE});
+
+	printf("\n_____ matrix_mul_tiled _____\n");
+
+	printf("\nRunning  on Device with 256 threads per block...");
+	ch4__matrix_mul(Device, {.block_dim = {16,16,1}, .kernel_version = CH4__MATRIX_MUL_KERNEL_TILED});
+
+	printf("\nRunning on Device with 1024 threads per block...");
+	ch4__matrix_mul(Device, {.block_dim = {32,32,1}, .kernel_version = CH4__MATRIX_MUL_KERNEL_TILED});
+
+	printf("\n_____ matrix_mul_CPU _____\n");
+	ch4__matrix_mul(Host, {});
+
+	return 0;
+}
+
