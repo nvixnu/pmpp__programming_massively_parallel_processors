@@ -23,7 +23,7 @@ COMPILEDOBJS := $(patsubst %,$(OBJDIR)/%,$(notdir $(OBJS)))
 # Creates the obj dir, compiles each dependency and then the main app
 all: objdir $(OBJS)
 	nvcc ch7__1d_convolution.cu -o 1d_convolution.out $(COMPILEDOBJS) $(CFLAGS) $(INCLUDES)
-	nvcc ch3__2d_convolution.cu -o 2d_convolution.out $(COMPILEDOBJS) $(CFLAGS) $(INCLUDES)
+	nvcc ch7__2d_convolution.cu -o 2d_convolution.out $(COMPILEDOBJS) $(CFLAGS) $(INCLUDES)
 
 # Creates the ./obj dir
 objdir:

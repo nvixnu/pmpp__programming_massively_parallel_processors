@@ -85,7 +85,7 @@ int main(){
 	printf("\nRunning on Device with 1024 threads per block...");
 	ch7__1d_convolution(Device, {.block_dim = {1024,1,1}});
 
-	printf("\n_____ 1d_convolution _____\n");
+	printf("\n_____ 1d_convolution_CPU _____\n");
 	ch7__1d_convolution(Host, {});
 	return 0;
 }
