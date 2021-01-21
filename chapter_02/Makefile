@@ -41,4 +41,4 @@ clean:
 	rm -Rf $(OBJDIR)/*.o
 	rm -Rf vec_add.out
 
-.PHONY: all clean app run
+.PHONY: all clean app run objdir

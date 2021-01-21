@@ -41,4 +41,4 @@ clean:
 	rm -Rf $(OBJDIR)/*.o
 	rm -Rf matrix_mul.out
 
-.PHONY: all clean app run
+.PHONY: all clean app run objdir

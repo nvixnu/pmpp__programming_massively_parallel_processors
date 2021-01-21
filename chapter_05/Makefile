@@ -40,4 +40,4 @@ clean:
 	rm -Rf $(OBJDIR)/*.o
 	rm -Rf sum_reduction.out
 
-.PHONY: all clean app run
+.PHONY: all clean app run objdir

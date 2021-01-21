@@ -39,4 +39,4 @@ clean:
 	rm -Rf blur.out
 	rm -Rf color_to_grayscale.out
 
-.PHONY: all clean app run
+.PHONY: all clean app run objdir
