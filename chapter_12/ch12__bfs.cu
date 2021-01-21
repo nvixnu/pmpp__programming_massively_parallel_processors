@@ -215,3 +215,19 @@ void ch12__bfs(env_e env, kernel_config_t config){
 
 	return;
 }
+
+int main(){
+	printf("Chapter 12\n");
+	printf("Edges: %d\n", CH12__EDGES_LENGTH);
+	printf("Destinations: %d\n", CH12__DEST_LENGTH);	
+
+	printf("\n_____ bfs _____\n");
+
+	printf("\nRunning on Device with 1024 threads per block...");
+	ch12__bfs(Device, {.block_dim = {1024, 1, 1}, .kernel_version = CH12__BLOCK_LEVEL_QUEUE});
+
+	printf("\n_____ bfs_CPU _____\n");
+	ch12__bfs(Host, {});
+
+	return 0;
+}
