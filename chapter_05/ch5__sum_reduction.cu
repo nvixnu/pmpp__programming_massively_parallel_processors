@@ -89,3 +89,21 @@ void ch5__sum_reduction(env_e env, kernel_config_t config){
 
 	return;
 }
+
+int main(){
+	printf("Chapter 05\n");
+	printf("Array with %d Elements\n", CH5__ARRAY_LENGTH);
+
+	printf("\n_____ sum_reduction _____\n\n");
+
+	printf("Running on Device with 256 threads per block...");
+	ch5__sum_reduction(Device, {.block_dim = {256,1,1}});
+
+	printf("\nRunning on Device with 1024 threads per block...");
+	ch5__sum_reduction(Device, {.block_dim = {1024,1,1}});
+
+	printf("\n_____ sum_reduction _____\n");
+	ch5__sum_reduction(Host, {});
+
+	return 0;
+}
