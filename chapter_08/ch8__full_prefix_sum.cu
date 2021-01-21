@@ -16,7 +16,7 @@
 #include "nvixnu__populate_arrays_utils.h"
 #include "nvixnu__error_utils.h"
 #include "pmpp__prefix_sum.h"
-
+#include "nvixnu__cuda_devices_props.h"
 
 
 __global__
@@ -138,5 +138,40 @@ void ch8__full_prefix_sum(env_e env, kernel_config_t config){
 	free(output);
 
 	return;
+}
+
+
+int main(){
+	//Gets the max length of shared memory to use as SECTION_SIZE of the 3-phase algorithm
+	cudaDeviceProp device_props =  nvixnu__get_cuda_device_props(0);
+	const int memory_bound_section_size = device_props.sharedMemPerBlock;
+	const int memory_bound_section_length = memory_bound_section_size/sizeof(double);
+	const int thread_bound_section_length = device_props.maxThreadsDim[0];
+
+	printf("Chapter 08\n");
+	printf("Array with %d Elements\n", CH8__ARRAY_LENGTH);
+
+	printf("\n_____ full_prefix_sum [Hierarchical Three phase Kogge-Stone] _____\n\n");
+
+	printf("\nRunning on Device with %d threads per block and section length equals to %d...", thread_bound_section_length, memory_bound_section_length);
+	ch8__full_prefix_sum(Device, {
+			.block_dim = {thread_bound_section_length,1,1},
+			.kernel_version = CH8__HIERARCHICAL_PREFIX_SUM_3_PHASE_KOGGE_STONE,
+			.shared_memory_size = memory_bound_section_size
+	});
+
+	printf("\n_____ full_prefix_sum [Single-pass Kogge-Stone] _____\n");
+
+	printf("\nRunning on Device with %d threads per block", thread_bound_section_length);
+	ch8__full_prefix_sum(Device, {
+			.block_dim = {thread_bound_section_length,1,1},
+			.kernel_version = CH8__SINGLE_PASS_PREFIX_SUM_KOGGE_STONE,
+			.shared_memory_size = thread_bound_section_length*sizeof(double)
+	});
+
+	printf("\n_____ full_prefix_sum_CPU _____\n");
+	ch8__full_prefix_sum(Host, {});
+
+	return 0;
 }
 

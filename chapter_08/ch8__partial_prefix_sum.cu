@@ -16,7 +16,7 @@
 #include "nvixnu__populate_arrays_utils.h"
 #include "nvixnu__error_utils.h"
 #include "pmpp__prefix_sum.h"
-
+#include "nvixnu__cuda_devices_props.h"
 
 /**
  * This partial (or sectioned) host version is only for comparison purpose with the partial scan kernels
@@ -98,4 +98,38 @@ void ch8__partial_prefix_sum(env_e env, kernel_config_t config, const int sectio
 	free(output);
 
 	return;
+}
+
+int main(){
+	//Gets the max length of shared memory to use as SECTION_SIZE of the 3-phase algorithm
+	cudaDeviceProp device_props =  nvixnu__get_cuda_device_props(0);
+	const int memory_bound_section_size = device_props.sharedMemPerBlock;
+	const int memory_bound_section_length = memory_bound_section_size/sizeof(double);
+	const int thread_bound_section_length = device_props.maxThreadsDim[0];
+
+	printf("Chapter 08\n");
+	printf("Array with %d Elements\n", CH8__ARRAY_LENGTH);
+
+	printf("\n_____ partial_prefix_sum [Kogge-Stone] _____\n\n");
+
+	printf("\nRunning on Device with %d threads per block...", thread_bound_section_length);
+	ch8__partial_prefix_sum(Device, {.block_dim = {thread_bound_section_length, 1, 1}, .kernel_version = CH8__PREFIX_SUM_KOGGE_STONE}, 0);
+
+	printf("\n_____ partial_prefix_sum [Brent-Kung] _____\n");
+	
+	printf("\nRunning on Device with %d threads per block...", thread_bound_section_length);
+	ch8__partial_prefix_sum(Device, {.block_dim = {thread_bound_section_length, 1, 1}, .kernel_version = CH8__PREFIX_SUM_BRENT_KUNG}, 0);
+
+	printf("\n_____ partial_prefix_sum_CPU [For Kogge-Stone/Brent-Kung comparison] _____\n");
+	ch8__partial_prefix_sum(Host, {}, thread_bound_section_length);
+
+	printf("\n_____ partial_prefix_sum [Three phase Kogge-Stone] _____\n");
+
+	printf("\nRunning on Device with %d threads per block and section length equals to %d...", thread_bound_section_length, memory_bound_section_length);
+	ch8__partial_prefix_sum(Device, {.block_dim = {thread_bound_section_length, 1, 1}, .kernel_version = CH8__PREFIX_SUM_3_PHASE_KOGGE_STONE, .shared_memory_size = memory_bound_section_size}, 0);
+
+	printf("\n_____ partial_prefix_sum_CPU [For Three phase Kogge-Stone comparison] _____\n");
+	ch8__partial_prefix_sum(Host, {}, memory_bound_section_length);
+
+	return 0;
 }
