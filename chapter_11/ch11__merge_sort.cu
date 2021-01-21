@@ -390,17 +390,17 @@ int main(){
 
 	printf("\n_____ merge_sort _____\n\n");
 
-	printf("Running on Device with 256 threads per block...");
+	printf("\nRunning on Device with 256 threads per block...");
 	ch11__merge_sort(Device, {.block_dim = {256, 1, 1}, .kernel_version = CH11__BASIC_MERGE_SORT});
 
-	printf("\n_____ merge_sort_tiled _____\n\n");
+	printf("\n_____ merge_sort_tiled _____\n");
 	
-	printf("Running on Device with 256 threads per block...");
+	printf("\nRunning on Device with 256 threads per block...");
 	ch11__merge_sort(Device, {.block_dim = {256}, .kernel_version = CH11__TILED_MERGE_SORT});
 
-	printf("\n_____ merge_sort_circular_buffer _____\n\n");
+	printf("\n_____ merge_sort_circular_buffer _____\n");
 
-	printf("Running on Device with 256 threads per block...");
+	printf("\nRunning on Device with 256 threads per block...");
 	ch11__merge_sort(Device, {.block_dim = {256, 1, 1}, .kernel_version = CH11__CIRCULAR_BUFFER_MERGE_SORT});
 
 
