@@ -78,3 +78,22 @@ void ch7__2d_convolution(env_e env, kernel_config_t config){
 
 	return;
 }
+
+
+int main(){
+	printf("Chapter 07\n");
+	printf("Matrix dimensions: %dx%d\n", CH7__2D_ARRAY_WIDTH, CH7__2D_ARRAY_HEIGHT);
+	printf("Mask width: %d\n", CH7__2D_MASK_WIDTH);
+
+	printf("\n_____ 2d_convolution _____\n\n");
+
+	printf("Running on Device with 256 threads per block...");
+	ch7__2d_convolution(Device, {.block_dim = {16,16,1}});
+
+	printf("\nRunning on Device with 1024 threads per block...");
+	ch7__2d_convolution(Device, {.block_dim = {32,32,1}});
+
+	printf("\n_____ 2d_convolution_CPU _____\n");
+	ch7__2d_convolution(Host, {});
+	return 0;
+}

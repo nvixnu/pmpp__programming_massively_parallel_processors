@@ -70,3 +70,22 @@ void ch7__1d_convolution(env_e env, kernel_config_t config){
 
 	return;
 }
+
+
+int main(){
+	printf("Chapter 07\n");
+	printf("Array with %d Elements\n", CH7__1D_ARRAY_LENGTH);
+	printf("Mask width: %d\n", CH7__1D_MASK_WIDTH);
+
+	printf("\n_____ 1d_convolution _____\n\n");
+
+	printf("Running on Device with 256 threads per block...");
+	ch7__1d_convolution(Device, {.block_dim = {256,1,1}});
+
+	printf("\nRunning on Device with 1024 threads per block...");
+	ch7__1d_convolution(Device, {.block_dim = {1024,1,1}});
+
+	printf("\n_____ 1d_convolution _____\n");
+	ch7__1d_convolution(Host, {});
+	return 0;
+}
