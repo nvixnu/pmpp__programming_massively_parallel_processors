@@ -215,3 +215,24 @@ void ch10__spmv(env_e env, kernel_config_t config){
 
 	return;
 }
+
+int main(){
+	printf("Chapter 10\n");
+	printf("Matrix dimensions: %dx%d\n", CH10__INPUT_ROWS, CH10__INPUT_COLS);
+	printf("Matrix nonzeros: %d\n", CH10__INPUT_NON_ZERO_LENGTH);
+	printf("Matrix largest nz row width: %d\n", CH10__INPUT_LARGEST_NONZERO_ROW_WIDTH);
+
+	printf("\n_____ spmv [CSR] _____\n\n");
+
+	printf("Running on Device with 1024 threads per block...");
+	ch10__spmv(Device, {.block_dim = {1024, 1, 1}, .kernel_version = CH10__SPMV_CSR});
+
+	printf("\n_____ spmv [ELL] _____\n\n");
+	printf("Running on Device with 1024 threads per block...");
+	ch10__spmv(Device, {.block_dim = {1024, 1, 1}, .kernel_version = CH10__SPMV_ELL});
+
+	printf("\n_____ spmv_CPU [CSR] _____\n\n");
+	ch10__spmv(Host, {});
+
+	return 0;
+}
