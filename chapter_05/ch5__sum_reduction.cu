@@ -102,7 +102,7 @@ int main(){
 	printf("\nRunning on Device with 1024 threads per block...");
 	ch5__sum_reduction(Device, {.block_dim = {1024,1,1}});
 
-	printf("\n_____ sum_reduction _____\n");
+	printf("\n_____ sum_reduction_CPU _____\n");
 	ch5__sum_reduction(Host, {});
 
 	return 0;
