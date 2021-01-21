@@ -87,3 +87,30 @@ void ch9__parallel_histogram(env_e env, kernel_config_t config){
 
 	return;
 }
+
+int main(){
+	printf("Chapter 09\n");
+	printf("Array with %d Elements\n", CH9__INPUT_ARRAY_LENGTH);
+
+	printf("\n_____ parallel_histogram [Block partitioning] _____\n\n");
+
+	printf("Running on Device with 1024 threads per block...");
+	ch9__parallel_histogram(Device, {.block_dim = {1024, 1, 1}, .kernel_version = CH9__HISTOGRAM_WITH_BLOCK_PARTITIONING});
+
+	printf("\n_____ parallel_histogram [Interleaved partitioning] _____\n");
+	printf("Running on Device with 1024 threads per block...");
+	ch9__parallel_histogram(Device, {.block_dim = {1024, 1, 1}, .kernel_version = CH9__HISTOGRAM_WITH_INTERLEAVED_PARTITIONING});
+
+	printf("\n_____ parallel_histogram [Privatization] _____\n");
+	printf("Running on Device with 1024 threads per block...");
+	ch9__parallel_histogram(Device, {.block_dim = {1024, 1, 1}, .kernel_version = CH9__HISTOGRAM_PRIVATIZED});
+
+	printf("\n_____ parallel_histogram [Aggregation] _____\n");
+	printf("Running on Device with 1024 threads per block...");
+	ch9__parallel_histogram(Device, {.block_dim = {1024, 1, 1}, .kernel_version = CH9__HISTOGRAM_AGGREGATED});
+
+	printf("\n_____ parallel_histogram_CPU _____\n");
+	ch9__parallel_histogram(Host, {});
+
+	return 0;
+}
