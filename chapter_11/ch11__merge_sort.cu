@@ -382,3 +382,30 @@ void ch11__merge_sort(env_e env, kernel_config_t config){
 
 	return;
 }
+
+int main(){
+	printf("Chapter 11\n");
+	printf("Array A length: %d\n", CH11__A_LENGTH);
+	printf("Array B length: %d\n", CH11__B_LENGTH);
+
+	printf("\n_____ merge_sort _____\n\n");
+
+	printf("Running on Device with 256 threads per block...");
+	ch11__merge_sort(Device, {.block_dim = {256, 1, 1}, .kernel_version = CH11__BASIC_MERGE_SORT});
+
+	printf("\n_____ merge_sort_tiled _____\n\n");
+	
+	printf("Running on Device with 256 threads per block...");
+	ch11__merge_sort(Device, {.block_dim = {256}, .kernel_version = CH11__TILED_MERGE_SORT});
+
+	printf("\n_____ merge_sort_circular_buffer _____\n\n");
+
+	printf("Running on Device with 256 threads per block...");
+	ch11__merge_sort(Device, {.block_dim = {256, 1, 1}, .kernel_version = CH11__CIRCULAR_BUFFER_MERGE_SORT});
+
+
+	printf("\n_____ merge_sort_CPU_____\n");
+	ch11__merge_sort(Host, {});
+
+	return 0;
+}

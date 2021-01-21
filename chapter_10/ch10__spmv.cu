@@ -227,11 +227,11 @@ int main(){
 	printf("Running on Device with 1024 threads per block...");
 	ch10__spmv(Device, {.block_dim = {1024, 1, 1}, .kernel_version = CH10__SPMV_CSR});
 
-	printf("\n_____ spmv [ELL] _____\n\n");
+	printf("\n_____ spmv [ELL] _____\n");
 	printf("Running on Device with 1024 threads per block...");
 	ch10__spmv(Device, {.block_dim = {1024, 1, 1}, .kernel_version = CH10__SPMV_ELL});
 
-	printf("\n_____ spmv_CPU [CSR] _____\n\n");
+	printf("\n_____ spmv_CPU [CSR] _____\n");
 	ch10__spmv(Host, {});
 
 	return 0;
